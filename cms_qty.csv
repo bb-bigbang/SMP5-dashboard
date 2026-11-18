@@ -1,0 +1,72 @@
+order,part,item,description,priority,uom,budget_qty,current_qty,last_cum,wk_qty,cum_qty,balance
+1,SMP5,200-1,Piping Erection,,Inch Dia,20288.75,24874.5,23481.75,179.0,23660.75,1213.75
+2,SMP5,200-1,Piping Erection,E08-01,Inch Dia,4471.0,4476.25,4476.25,0.0,4476.25,0.0
+3,SMP5,200-1,Piping Erection,E08-02,Inch Dia,1341.5,1653.5,1653.5,0.0,1653.5,0.0
+4,SMP5,200-1,Piping Erection,E04-01,Inch Dia,2414.5,4513.25,4440.5,72.75,4513.25,0.0
+5,SMP5,200-1,Piping Erection,E04-02,Inch Dia,10238.75,10981.75,9681.75,86.25,9768.0,1213.75
+6,SMP5,200-1,Piping Erection,E04-03,Inch Dia,574.25,1449.75,1429.75,20.0,1449.75,0.0
+7,SMP5,200-1,Piping Erection,E07,Inch Dia,1248.75,1800.0,1800.0,0.0,1800.0,0.0
+8,SMP5,200-4,Pipe Support: Pipe Support Site Erection (Inc. Touch Up Paint),,MT,0.0,32.0,0.0,0.0,0.0,32.0
+9,SMP5,200-5,NDE (RT),,No of Joints,1673.0,1431.0,1407.0,13.0,1420.0,11.0
+10,SMP5,200-5,NDE (RT),E08,No of Joints,,,395.0,0.0,395.0,
+11,SMP5,200-5,NDE (RT),E04,No of Joints,,,873.0,13.0,886.0,
+12,SMP5,200-5,NDE (RT),E07,No of Joints,,,139.0,0.0,139.0,
+13,SMP5,200-7,Painting,,M2,200.0,231.751354,83.702357,6.0,89.702357,142.048997
+14,SMP5,200-9,Flange Joint of Pipe (Propose for Non-CMS),,Inch Dia,0.0,,9838.0,0.0,9838.0,
+15,SMP5,200-10,Piping Modify: Cutting and beveling (Propose for Non-CMS),,Inch Dia,0.0,,9967.25,0.0,9967.25,
+16,SMP5,200-11,Screwed/Threaded Joint (Propose for Non-CMS),,Inch Dia,0.0,5903.25,5300.5,0.0,5300.5,602.75
+17,SMP5,200-11,Screwed/Threaded Joint (Propose for Non-CMS),E04-01,Inch Dia,0.0,1753.5,1692.5,0.0,1692.5,61.0
+18,SMP5,200-11,Screwed/Threaded Joint (Propose for Non-CMS),E04-02,Inch Dia,0.0,4149.75,3608.0,0.0,3608.0,541.75
+19,SMP5,200-12,Pipe Joint CPVC (Propose for Non-CMS),,Inch Dia,0.0,1521.0,0.0,0.0,0.0,1516.0
+20,SMP5,200-12,Pipe Joint CPVC (Propose for Non-CMS),E04-01,Inch Dia,0.0,463.0,0.0,0.0,0.0,463.0
+21,SMP5,200-12,Pipe Joint CPVC (Propose for Non-CMS),E04-02,Inch Dia,0.0,1053.0,0.0,0.0,0.0,1053.0
+22,SMP5,200-12,Pipe Joint CPVC (Propose for Non-CMS),E04-03,Inch Dia,0.0,5.0,0.0,0.0,0.0,0.0
+23,SMP5,200-13,Stainless Steel (FI-095),,Inch Dia,,3365.5,2414.0,0.0,2414.0,951.5
+24,SMP5,200-13,Stainless Steel (FI-095),E08,Inch Dia,,3365.5,2414.0,0.0,2414.0,951.5
+25,SMP5,320,Supply Material and Application of Insulation,,M2,2197.24,2197.24,1611.823842,0.0,1611.823842,585.416158
+26,SMP5,340,Steam Tracing,,m,525.02,1723.45,1528.67,0.0,1528.67,194.78
+27,SMP5,400-1.2,Handrail Fabrication,,m,89.0,15.0,15.0,0.0,15.0,0.0
+28,SMP5,400-1.2,Handrail Fabrication,E04-02,m,89.0,15.0,,,,
+29,SMP5,400-2.1,Steel Structure Installation,,MT,337.47,208.494588,133.754274,10.703274,144.457548,64.03704
+30,SMP5,400-2.1,Steel Structure Installation,E08-02,MT,51.5,20.45937,20.456,0.00337,20.45937,0.0
+31,SMP5,400-2.1,Steel Structure Installation,E04-02,MT,209.51,185.065218,110.326334,10.701844,121.028178,64.03704
+32,SMP5,400-2.1,Steel Structure Installation,E07,MT,76.46,2.97,2.97194,-0.00194,2.97,0.0
+33,SMP5,400-2.2,Handrail Installation,,m,89.0,1566.2,1365.433,-17.004,1348.429,217.771
+34,SMP5,400-2.2,Handrail Installation,E08-02,m,2.08473,36.38,26.52,9.86,36.38,0.0
+35,SMP5,400-2.2,Handrail Installation,E04-02,m,78.629709,1385.26,1194.61,-27.124,1167.486,217.774
+36,SMP5,400-2.2,Handrail Installation,E07,m,8.285561,144.56,144.303,0.26,144.563,-0.003
+37,SMP5,400-2.3,Cladding Installation,,M2,939.0,1166.349034,901.24,36.799034,938.039034,228.31
+38,SMP5,400-2.3,Cladding Installation,E08-02,M2,355.068036,551.039034,524.24,26.799034,551.039034,0.0
+39,SMP5,400-2.3,Cladding Installation,E04-02,M2,525.312292,525.31,297.0,0.0,297.0,228.31
+40,SMP5,400-2.3,Cladding Installation,E07,M2,58.619673,90.0,80.0,10.0,90.0,0.0
+41,SMP5,400-2.4,Grating Installation,,M2,46.003374,1627.01,1256.429884,72.12,1328.549884,298.460116
+42,SMP5,400-2.4,Grating Installation,E08-02,M2,3.429968,120.52,119.28,1.24,120.52,0.0
+43,SMP5,400-2.4,Grating Installation,E04-02,M2,34.673349,1172.41,803.067929,70.88,873.947929,298.462071
+44,SMP5,400-2.4,Grating Installation,E07,M2,7.900057,334.08,334.081955,0.0,334.081955,-0.001955
+45,SMP5,500,Equipment Installation (Count based on carried out activity),,Nos,495.0,495.0,476.0,0.0,476.0,19.0
+46,SMP5,500,Equipment Installation (Count based on carried out activity),E08-01,Nos,127.0,127.0,119.0,0.0,119.0,8.0
+47,SMP5,500,Equipment Installation (Count based on carried out activity),E08-02,Nos,26.0,26.0,23.0,0.0,23.0,3.0
+48,SMP5,500,Equipment Installation (Count based on carried out activity),E04-01,Nos,68.0,68.0,66.0,0.0,66.0,2.0
+49,SMP5,500,Equipment Installation (Count based on carried out activity),E04-02,Nos,233.0,233.0,227.0,0.0,227.0,6.0
+50,SMP5,500,Equipment Installation (Count based on carried out activity),E04-03,Nos,26.0,26.0,26.0,0.0,26.0,0.0
+51,SMP5,500,Equipment Installation (Count based on carried out activity),E07,Nos,15.0,15.0,15.0,0.0,15.0,0.0
+52,SMP5.1,200-6.1,Hydrotest and Pneumatic Test,,Inch Meter,,130539.074,84477.46,1761.81,86239.27,44299.804
+53,SMP5.1,200-6.1,Hydrotest and Pneumatic Test,E08-01,Inch Meter,,30295.63505,29680.06205,0.0,29680.06205,615.573
+54,SMP5.1,200-6.1,Hydrotest and Pneumatic Test,E08-02,Inch Meter,,13070.28375,13070.28375,0.0,13070.28375,0.0
+55,SMP5.1,200-6.1,Hydrotest and Pneumatic Test,E04-01,Inch Meter,,4883.085625,4768.402125,0.0,4768.402125,114.6835
+56,SMP5.1,200-6.1,Hydrotest and Pneumatic Test,E04-02,Inch Meter,,57037.587575,19246.413075,1751.81,20998.223075,36039.3645
+57,SMP5.1,200-6.1,Hydrotest and Pneumatic Test,E04-03,Inch Meter,,4622.03325,3592.35025,10.0,3602.35025,1019.683
+58,SMP5.1,200-6.1,Hydrotest and Pneumatic Test,E07,Inch Meter,,20630.44875,14119.94875,0.0,14119.94875,6510.5
+59,SMP5.1,200-6.2,Pipe Services Test and Visual Test,,Inch Meter,,129347.05465,103100.82165,15808.0855,118908.90715,10438.1475
+60,SMP5.1,200-6.2,Pipe Services Test and Visual Test,E08-01,Inch Meter,,13708.12415,13708.12415,0.0,13708.12415,0.0
+61,SMP5.1,200-6.2,Pipe Services Test and Visual Test,E08-02,Inch Meter,,444.228,444.228,0.0,444.228,0.0
+62,SMP5.1,200-6.2,Pipe Services Test and Visual Test,E04-01,Inch Meter,,26693.5515,25203.138,538.854,25741.992,951.5595
+63,SMP5.1,200-6.2,Pipe Services Test and Visual Test,E04-02,Inch Meter,,24614.07,15029.419,98.063,15127.482,9486.588
+64,SMP5.1,200-6.2,Pipe Services Test and Visual Test,E04-03,Inch Meter,,456.562,456.562,0.0,456.562,0.0
+65,SMP5.1,200-6.2,Pipe Services Test and Visual Test,E07,Inch Meter,,63430.519,48259.3505,15171.1685,63430.519,0.0
+66,SMP5.1,200-6.3,Resinstatement Only,,Inch Meter,,57286.135837,44627.478837,3410.3075,48037.786338,9248.3495
+67,SMP5.1,200-6.3,Resinstatement Only,E08-01,Inch Meter,,11070.950838,11070.950838,0.0,11070.950838,0.0
+68,SMP5.1,200-6.3,Resinstatement Only,E08-02,Inch Meter,,3619.072,3619.072,0.0,3619.072,0.0
+69,SMP5.1,200-6.3,Resinstatement Only,E04-01,Inch Meter,,715.846,715.846,0.0,715.846,0.0
+70,SMP5.1,200-6.3,Resinstatement Only,E04-02,Inch Meter,,1124.649,1036.309,0.0,1036.309,88.34
+71,SMP5.1,200-6.3,Resinstatement Only,E07,Inch Meter,,40755.618,28185.301,3410.3075,31595.6085,9160.0095

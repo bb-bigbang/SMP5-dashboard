@@ -121,7 +121,9 @@ details.sm-foot li { margin: 4px 0; }
       <button class="sm-tab" role="tab" aria-selected="false" aria-controls="weld" data-tab="weld">5 · Welding &amp; QC</button>
       <button class="sm-tab" role="tab" aria-selected="false" aria-controls="mech" data-tab="mech">6 · Mechanical</button>
       <button class="sm-tab" role="tab" aria-selected="false" aria-controls="progress" data-tab="progress">7 · Progress &amp; Manpower</button>
+      <button class="sm-tab" role="tab" aria-selected="false" aria-controls="cms" data-tab="cms">8 · CMS (Bill &amp; Price)</button>
       <button class="sm-tab" role="tab" aria-selected="false" aria-controls="weldlog" data-tab="weldlog">9 · Weld Log (RMC)</button>
+      <button class="sm-tab" role="tab" aria-selected="false" aria-controls="amogh" data-tab="amogh">10 · Client DB (AMOGH)</button>
       <button class="sm-tab" role="tab" aria-selected="false" aria-controls="compl" data-tab="compl">11 · Completion Forecast</button>
     </div>
     <label class="sm-ctl">Priority
@@ -466,7 +468,88 @@ details.sm-foot li { margin: 4px 0; }
   </section>
 
   <!-- ===================== 8 CMS (BILL & PRICE) ===================== -->
-  
+  <section id="cms" class="sm-sec" role="tabpanel" hidden>
+    <p class="sm-note sm-ks">สรุปจากไฟล์ 261113_SMP5-CMS_a_Priced · ชีท Part B Bill Progress, Part B WBS Progress และ SCurve RFC-3 · cut-off 13 พ.ย. 2026 · มูลค่าเป็นล้านบาท (MB)</p>
+    <div class="sm-kpis">
+      <div class="sm-kpi"><span class="sm-kl">Combined progress (SMP5 + SMP5.1)</span><span class="sm-kv" data-draw="bkpi" data-k="o|actual">—</span><span class="sm-ks">Forecast-3 <span data-draw="bkpi" data-k="o|forecast">—</span> · สัปดาห์นี้ +<span data-draw="bkpi" data-k="o|wk_actual">—</span></span></div>
+      <div class="sm-kpi"><span class="sm-kl">SMP5 (B-1)</span><span class="sm-kv" data-draw="bkpi" data-k="s5|actual">—</span><span class="sm-ks">Forecast-3 <span data-draw="bkpi" data-k="s5|forecast">—</span></span></div>
+      <div class="sm-kpi"><span class="sm-kl">SMP5.1 (B-1A Test &amp; Reinstate)</span><span class="sm-kv" data-draw="bkpi" data-k="s51|actual">—</span><span class="sm-ks">Forecast-3 <span data-draw="bkpi" data-k="s51|forecast">—</span></span></div>
+      <div class="sm-kpi"><span class="sm-kl">มูลค่างานปัจจุบัน (Current Price)</span><span class="sm-kv" data-draw="bkpi" data-k="o|current_price">—</span><span class="sm-ks">สัญญาเดิม SMP5 <span data-draw="bkpi" data-k="s5|contract_price">—</span></span></div>
+      <div class="sm-kpi"><span class="sm-kl">มูลค่างานที่ทำได้แล้ว</span><span class="sm-kv" data-draw="vkpi" data-k="earned_value">—</span><span class="sm-ks">คงเหลือ <span data-draw="vkpi" data-k="remaining_value">—</span></span></div>
+    </div>
+
+    <div class="sm-grid2">
+      <div class="sm-card" id="cms-bill-bar">
+        <h2>Progress ราย Bill</h2>
+        <div class="sm-legend"><span><i class="sw" data-c="0"></i>Actual</span><span><i class="sw line" data-c="1"></i>Forecast-3</span></div>
+        <div class="sm-chart short" data-draw="billbar" data-source="cms_bill"></div>
+      </div>
+      <div class="sm-card" id="cms-value-bar">
+        <h2>มูลค่าราย Bill (ล้านบาท)</h2>
+        <div class="sm-legend"><span><i class="sw" data-c="0"></i>ทำได้แล้ว</span><span><i class="sw"></i>คงเหลือ</span></div>
+        <div class="sm-chart short" data-draw="valuebar" data-source="bill_value"></div>
+        <p class="sm-note">มูลค่าที่ทำได้ = Current Price × Actual % ของแต่ละ Bill</p>
+      </div>
+    </div>
+
+    <div class="sm-grid2">
+      <div class="sm-card" id="cms-value-donut">
+        <h2>สัดส่วนมูลค่างานตาม Bill</h2>
+        <div class="sm-chart" data-draw="valuedonut" data-source="cms_bill bill_value"></div>
+        <p class="sm-note">ตรงกลาง = % มูลค่าที่ทำได้แล้วของทั้งโครงการ</p>
+      </div>
+      <div class="sm-card" id="cms-remain-donut">
+        <h2>MHrs ที่เหลือ อยู่ที่ Priority ไหน</h2>
+        <div class="sm-chart" data-draw="remaindonut" data-source="cms_progress"></div>
+        <p class="sm-note">MHrs คงเหลือ = MHrs × (1 − Actual %) ของแต่ละ Priority</p>
+      </div>
+    </div>
+
+    <div class="sm-card" id="cms-bill-table">
+      <h2>Weekly Progress Summary by Bill (Part B Bill Progress)</h2>
+      <div class="sm-tw">
+        <table class="sm-t" data-source="cms_bill bill_value" data-row-key="order">
+          <thead><tr><th>Bill</th><th class="l">Discipline</th><th>UOM</th><th data-field="weight">% Weight</th><th data-field="mhrs">MHrs (Current)</th><th data-field="contract_price">Contract (MB)</th><th data-field="current_price">Current (MB)</th><th data-field="plan">Plan</th><th data-field="forecast">Forecast-3</th><th data-field="actual">Actual</th><th data-field="wk_actual">สัปดาห์นี้</th><th data-field="var_forecast">vs F-3</th><th data-source="bill_value" data-field="earned_value">ทำได้แล้ว (MB)</th></tr></thead>
+          <tbody data-draw="billtable"></tbody>
+        </table>
+      </div>
+      <p class="sm-note">ตารางนี้เป็นระดับทั้งโครงการ ไม่ขึ้นกับตัวกรอง · % Weight ของ Bill เทียบภายในส่วน SMP5 หรือ SMP5.1 · ราคาเป็นล้านบาท</p>
+    </div>
+
+    <div class="sm-card" id="cms-scurve">
+      <h2>S-Curve + แท่งรายสัปดาห์ (SCurve RFC-3)</h2>
+      <div class="sm-legend"><span><i class="sw line" data-c="0"></i>Actual สะสม</span><span><i class="sw line" data-c="1"></i>Forecast-3 สะสม</span><span><i class="sw dashl"></i>Plan (baseline)</span><span><i class="sw" data-c="0"></i>Actual รายสัปดาห์</span><span><i class="sw" data-c="1"></i>F-3 รายสัปดาห์</span></div>
+      <div class="sm-chart tall" data-draw="pgscurve" data-source="cms_scurve"></div>
+      <p class="sm-note">เส้น = สะสม (แกนซ้าย) · แท่ง = รายสัปดาห์ (แกนขวา) · เปลี่ยน Priority ที่ตัวกรองด้านบนเพื่อดูของแต่ละ Priority</p>
+    </div>
+
+    <div class="sm-card" id="cms-prio-bar">
+      <h2>Actual เทียบ Forecast-3 ราย Priority</h2>
+      <div class="sm-legend"><span><i class="sw" data-c="0"></i>Actual</span><span><i class="sw line" data-c="1"></i>Forecast-3</span><span><i class="sw" style="background:var(--color-bad)"></i>ช้ากว่า F-3 เกิน 15 pp</span></div>
+      <div class="sm-chart short" data-draw="priobar" data-source="cms_progress"></div>
+    </div>
+
+    <div class="sm-card" id="cms-wbs-table">
+      <h2>WBS Progress (Part B WBS Progress)</h2>
+      <div class="sm-tw">
+        <table class="sm-t" data-source="cms_progress" data-row-key="key,name">
+          <thead><tr><th class="l">Priority / Discipline</th><th data-field="mhrs">MHrs</th><th data-field="plan">Plan</th><th data-field="forecast">Forecast-3</th><th data-field="actual">Actual</th><th data-field="wk_actual">สัปดาห์นี้</th><th data-field="var_forecast">vs F-3</th></tr></thead>
+          <tbody data-draw="pgtable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="sm-card" id="cms-qty">
+      <h2>Quantity Status (ปริมาณงาน)</h2>
+      <div class="sm-tw">
+        <table class="sm-t" data-source="cms_qty" data-row-key="order">
+          <thead><tr><th>Item</th><th class="l">Description</th><th>Priority</th><th>UOM</th><th data-field="budget_qty">Budget</th><th data-field="current_qty">Current</th><th data-field="last_cum">ถึงสัปดาห์ก่อน</th><th data-field="wk_qty">สัปดาห์นี้</th><th data-field="cum_qty">สะสม</th><th data-field="balance">คงเหลือ</th><th>% ของ Current</th></tr></thead>
+          <tbody data-draw="qtytable"></tbody>
+        </table>
+      </div>
+      <p class="sm-note">รวมทุก Priority = แสดงยอดรวมของแต่ละรายการ · เลือก Priority เพื่อดูแยก · “คงเหลือ” = Current Qty − สะสม (Update Quantity ในชีท)</p>
+    </div>
+  </section>
 
   <!-- ===================== 9 WELD LOG ===================== -->
   <section id="weldlog" class="sm-sec" role="tabpanel" hidden>
@@ -525,7 +608,107 @@ details.sm-foot li { margin: 4px 0; }
   </section>
 
   <!-- ===================== 10 CLIENT DB (AMOGH) ===================== -->
-  
+  <section id="amogh" class="sm-sec" role="tabpanel" hidden>
+    <p class="sm-note sm-ks">จากไฟล์ 261031_SMP5-Remaining DB from AMOUGH (ฐานข้อมูลลูกค้า ราย joint, cut-off 31 ต.ค. 2026) · ไม่รวม joint ที่ CANCELLED · DB ของงานท่อไม่รวม Pipe Support · Priority อ้างจากรายการ Piping Package</p>
+    <div class="sm-kpis">
+      <div class="sm-kpi"><span class="sm-kl">DB งานท่อใน AMOGH</span><span class="sm-kv" data-draw="amkpi" data-k="pipe_db">—</span><span class="sm-ks">Completed (1)+(4) <span data-draw="amkpi" data-k="done_pct">—</span></span></div>
+      <div class="sm-kpi"><span class="sm-kl">(2) Incompleted · งานเหลือจริง</span><span class="sm-kv" data-draw="amkpi" data-k="db2">—</span><span class="sm-ks"><span data-draw="amkpi" data-k="j2">—</span> joints · <span data-draw="amkpi" data-k="pk2">—</span> packages</span></div>
+      <div class="sm-kpi"><span class="sm-kl">(4) AMOGH เสร็จ รอ ITR-118</span><span class="sm-kv" data-draw="amkpi" data-k="db4">—</span><span class="sm-ks"><span data-draw="amkpi" data-k="j4">—</span> joints</span></div>
+      <div class="sm-kpi"><span class="sm-kl">(3) ITR-118 เสร็จ รอคีย์ AMOGH</span><span class="sm-kv" data-draw="amkpi" data-k="db3">—</span><span class="sm-ks"><span data-draw="amkpi" data-k="j3">—</span> joints</span></div>
+      <div class="sm-kpi"><span class="sm-kl">Package ที่ตัวเลขไม่ตรงกับ Weld Log</span><span class="sm-kv" data-draw="amkpi" data-k="mismatch">—</span><span class="sm-ks">ต่างเกิน 5 DB จาก <span data-draw="amkpi" data-k="matched">—</span> packages</span></div>
+      <div class="sm-kpi"><span class="sm-kl">Weld report ยังไม่มี PDF</span><span class="sm-kv" data-draw="amkpi" data-k="pdf_missing">—</span><span class="sm-ks">joints ที่เชื่อมแล้ว</span></div>
+    </div>
+
+    <div class="sm-card" id="am-status">
+      <h2>1 · สถานะ joint ใน AMOGH ราย Priority (DB)</h2>
+      <div class="sm-legend"><span><i class="sw" data-c="0"></i>(1) Completed</span><span><i class="sw" data-c="1"></i>(4) AMOGH เสร็จ รอ ITR-118</span><span><i class="sw" data-c="2"></i>(3) ITR-118 เสร็จ รอคีย์ AMOGH</span><span><i class="sw" style="background:var(--color-bad)"></i>(2) Incompleted</span><span><i class="sw"></i>(5) IJ</span></div>
+      <div class="sm-chart short" data-draw="amstatus" data-source="am_status"></div>
+      <p class="sm-note">ไม่รวม (6) Pipe Support (11,326 DB) ซึ่งนับ DB คนละแบบ</p>
+    </div>
+
+    <div class="sm-grid2">
+      <div class="sm-card" id="am-remain">
+        <h2>2 · งานเหลือ (Incompleted) ราย package</h2>
+        <div class="sm-tw">
+          <table class="sm-t" data-source="am_pkg" data-row-key="package">
+            <thead><tr><th>Package</th><th>Priority</th><th data-field="db2">DB เหลือ</th><th data-field="j2">Joints</th><th data-field="pipe_db">DB ทั้ง pkg</th><th>% เหลือ</th></tr></thead>
+            <tbody data-draw="amremain"></tbody>
+          </table>
+        </div>
+        <p class="sm-note">เรียงตาม DB เหลือ · แสดง 25 รายการแรก</p>
+      </div>
+      <div class="sm-card" id="am-remain-type">
+        <h2>งานเหลือแยกชนิด joint</h2>
+        <div class="sm-chart short" data-draw="amremaintype" data-source="am_status"></div>
+        <p class="sm-note">BW = Butt weld · NM = Non-metallic (CPVC/HDPE) · THD = เกลียว · FB = Flange bolt-up</p>
+      </div>
+    </div>
+
+    <div class="sm-card" id="am-why">
+      <h2>3A · ทำไม DB ใน Weld Log ไม่ตรงกับ AMOGH (เทียบราย joint)</h2>
+      <p class="sm-note">จับคู่ joint ด้วย Drawing + Spool + Joint no. (ถ้า spool ต่างกันจับด้วย Drawing + Joint no.) แล้วแยกเหตุผลของแต่ละ joint</p>
+      <div class="sm-legend"><span><i class="sw" style="background:var(--color-ok)"></i>ตรงกัน</span><span><i class="sw" data-c="0"></i>จัดประเภทต่างกัน</span><span><i class="sw" data-c="1"></i>ไม่มีใน AMOGH</span><span><i class="sw" style="background:var(--color-bad)"></i>สถานะ AMOGH ยังไม่อัปเดต</span><span><i class="sw"></i>AMOGH มีแต่ Weld Log ไม่มี</span></div>
+      <div class="sm-chart" data-draw="rcbridge" data-source="recon_reason"></div>
+      <div class="sm-tw">
+        <table class="sm-t" data-source="recon_reason">
+          <thead><tr><th class="l">เหตุผล</th><th>Joints</th><th>Weld Log (DB)</th><th>AMOGH (DB)</th><th>% ของ Weld Log</th><th class="l">ควรทำอะไรต่อ</th></tr></thead>
+          <tbody data-draw="rctable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="sm-card" id="am-why-pkg">
+      <h2>3B · Package ที่ต่างมากสุด แยกตามเหตุผล (DB)</h2>
+      <div class="sm-tw">
+        <table class="sm-t" data-source="recon_pkg" data-row-key="package">
+          <thead><tr><th>Package</th><th>Priority</th><th data-field="log_total">Weld Log</th><th data-field="OK">ตรงกัน</th><th data-field="F">Pipe Support</th><th data-field="E">IJ</th><th>ไม่มีใน AMOGH</th><th>สถานะ AMOGH ค้าง</th><th data-field="X">AMOGH มีแต่ Log ไม่มี</th></tr></thead>
+          <tbody data-draw="rcpkg"></tbody>
+        </table>
+      </div>
+      <p class="sm-note">ไม่มีใน AMOGH = Vendor TP380 + Package TRIM + joint ที่หาไม่เจอ + เชื่อมหลัง 31 ต.ค. · สถานะ AMOGH ค้าง = Incompleted + รอคีย์ + Cancelled + DB ต่าง · แสดง 30 package ที่ส่วนที่ไม่ตรงมากสุด</p>
+    </div>
+
+    <div class="sm-card" id="am-recon">
+      <h2>3 · เทียบตัวเลขลูกค้า (AMOGH) กับ Weld Log ของเรา ราย package</h2>
+      <div class="sm-chart short" data-draw="amreconbar" data-source="am_recon"></div>
+      <div class="sm-tw">
+        <table class="sm-t" data-source="am_recon" data-row-key="key,package">
+          <thead><tr><th>Package</th><th>Priority</th><th data-field="am_done">AMOGH Completed (DB)</th><th data-field="log_db">Weld Log (DB)</th><th data-field="diff">ต่าง (Log − AMOGH)</th><th data-field="am_pending">AMOGH ยังไม่เสร็จ (DB)</th></tr></thead>
+          <tbody data-draw="amrecon"></tbody>
+        </table>
+      </div>
+      <p class="sm-note">AMOGH Completed = (1)+(4) · ต่างบวก = เราบันทึกเชื่อมแล้วแต่ AMOGH ยังไม่นับ · ต่างลบ = AMOGH มีมากกว่าบันทึกของเรา · AMOGH cut-off 31 ต.ค. ส่วน Weld Log 13 พ.ย. · แสดง 30 รายการที่ต่างมากสุด</p>
+    </div>
+
+    <div class="sm-grid2">
+      <div class="sm-card" id="am-docs">
+        <h2>4 · เอกสารค้าง: ITR-118 เสร็จแต่ยังไม่คีย์ AMOGH</h2>
+        <div class="sm-tw">
+          <table class="sm-t" data-source="am_pkg" data-row-key="package">
+            <thead><tr><th>Package</th><th>Priority</th><th data-field="db3">DB</th><th data-field="j3">Joints</th><th data-field="pdf_missing">ไม่มี PDF</th></tr></thead>
+            <tbody data-draw="amdocs"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="sm-card" id="am-lag">
+        <h2>เวลาจากวันเชื่อมถึงวันคีย์เข้า AMOGH (ตามเดือนที่เชื่อม)</h2>
+        <div class="sm-legend" data-draw="amlaglegend"></div>
+        <div class="sm-chart" data-draw="amlag" data-source="am_lag"></div>
+      </div>
+    </div>
+
+    <div class="sm-card" id="am-nde">
+      <h2>5 · RT ที่ต้องทำตาม NDE Class เทียบ RT/PAUT ที่ทำแล้ว</h2>
+      <div class="sm-chart short" data-draw="amndebar" data-source="am_nde"></div>
+      <div class="sm-tw">
+        <table class="sm-t" data-source="am_nde" data-row-key="key,package">
+          <thead><tr><th>Package</th><th>Priority</th><th data-field="welded_joints">Joints เชื่อมแล้ว</th><th data-field="rt_req">RT ที่ต้องทำ (joint)</th><th data-field="rt_done">RT/PAUT ทำแล้ว</th><th data-field="short">ขาด</th></tr></thead>
+          <tbody data-draw="amnde"></tbody>
+        </table>
+      </div>
+      <p class="sm-note">RT ที่ต้องทำ = ผลรวม % RT ของแต่ละ joint ที่เชื่อมแล้วใน AMOGH (เช่น 10% × 30 joints = 3, ปัดเศษ) · RT/PAUT ทำแล้วจาก Weld Log · เป็นค่าประมาณระดับ package ใช้คัดกรองเพื่อตรวจต่อ · แสดง 25 package ที่ขาดมากสุด</p>
+    </div>
+  </section>
 
   <!-- ===================== 11 COMPLETION FORECAST ===================== -->
   <section id="compl" class="sm-sec" role="tabpanel" hidden>
@@ -579,7 +762,9 @@ details.sm-foot li { margin: 4px 0; }
       <li>Joint / QC: ชีท “(1) Input DB” คอลัมน์ชุดสุดท้าย (WELDING DATE, DB Weld, RT/PAUT)</li>
       <li>Mechanical: ไฟล์ “261113_SMP5_Mechanical_Package_Status” — Step จากชีท D1-Data Input, Activity จากชีท Sum, ITR ที่ต้องทำ/เสร็จและวันที่จากชีท D1-ITR Matrix</li>
       <li>Weighted progress: ไฟล์ “261113_SMP5-CMS_a_Priced” (cut-off 13 พ.ย. 2026) — ชีท Part B WBS Progress (ตารางแรก, Current Qty), S-Curve จากชีท SCurve RFC-3, MCQP จากชีท Productivity Rate</li>
+      <li>CMS (Bill &amp; Price): ชีท Part B Bill Progress ส่วนบน (% และราคา) และส่วน Quantity Status</li>
       <li>Weld Log (RMC): ไฟล์ “20261113_Status_DB_CFP_SME_5” ชีท Progress 13-Nov-26 (ราย joint) รวมเป็นรายสัปดาห์/ราย package/ตามวัสดุ</li>
+      <li>Client DB (AMOGH): ไฟล์ “261031_SMP5-Remaining DB from AMOUGH” ชีท E04 และ E07 and E08 (ราย joint, ไม่รวม CANCELLED)</li>
       <li>Completion Forecast: ไฟล์ “261113_SMP5_Overall_ITR_Status_a” ชีท Data (สถานะราย tag/package, Complete date, Forecast Adjust, MCWD Target)</li>
       <li>Manpower: ไฟล์ “261106_Manpower_Loading” — ชีท MP Histrogram by Discipline และ E-04/E-07/E-08 On-site (Direct manpower)</li>
       <li>ช่อง #REF! ในไฟล์ต้นฉบับ (เช่น MCQC ในชีท SUM และ Plan ในชีท PI Commodity) ไม่ได้นำมาใช้</li>
@@ -587,10 +772,10 @@ details.sm-foot li { margin: 4px 0; }
   </details>
 </div>
 </div>
-<div class="site-foot">สร้างไฟล์เมื่อ 18 Nov 2026 09:00 (เวลาไทย) · ข้อมูลเป็นสำเนา ณ วันที่ระบุในแต่ละแท็บ</div>
+<div class="site-foot">สร้างไฟล์เมื่อ 18 Nov 2026 09:36 (เวลาไทย) · ข้อมูลเป็นสำเนา ณ วันที่ระบุในแต่ละแท็บ</div>
 <script>
 (function () {
-  var FILES = {"summary": "data/commodity_summary.csv", "weekly": "data/commodity_weekly.csv", "subcon": "data/subcon_weekly.csv", "pkgsum": "data/testpkg_summary.csv", "pkglist": "data/testpkg_list.csv", "itr": "data/itr_status.csv", "itrw": "data/itr_weekly.csv", "joints": "data/joints_summary.csv", "mech_steps": "data/mech_steps.csv", "mech_activity": "data/mech_activity.csv", "mech_itr": "data/mech_itr.csv", "mech_weekly": "data/mech_weekly.csv", "cms_progress": "data/cms_progress.csv", "cms_scurve": "data/cms_scurve.csv", "cms_mcqp": "data/cms_mcqp.csv", "manpower": "data/manpower_weekly.csv", "weld_weekly": "data/weld_weekly.csv", "weld_pkg": "data/weld_pkg.csv", "weld_mix": "data/weld_mix.csv", "cp_tags": "data/cp_tags.csv"};
+  var FILES = {"summary": "commodity_summary.csv", "weekly": "commodity_weekly.csv", "subcon": "subcon_weekly.csv", "pkgsum": "testpkg_summary.csv", "pkglist": "testpkg_list.csv", "itr": "itr_status.csv", "itrw": "itr_weekly.csv", "joints": "joints_summary.csv", "mech_steps": "mech_steps.csv", "mech_activity": "mech_activity.csv", "mech_itr": "mech_itr.csv", "mech_weekly": "mech_weekly.csv", "cms_progress": "cms_progress.csv", "cms_scurve": "cms_scurve.csv", "cms_mcqp": "cms_mcqp.csv", "manpower": "manpower_weekly.csv", "weld_weekly": "weld_weekly.csv", "weld_pkg": "weld_pkg.csv", "weld_mix": "weld_mix.csv", "cp_tags": "cp_tags.csv", "cms_bill": "cms_bill.csv", "cms_qty": "cms_qty.csv", "am_status": "am_status.csv", "am_pkg": "am_pkg.csv", "am_lag": "am_lag.csv", "recon_reason": "recon_reason.csv", "recon_pkg": "recon_pkg.csv"};
   var parsed = {}, calcs = {}, draws = {}, onDatas = [], params = {}, ready = false, queued = false;
   var colors = ['#2f6fde', '#e07b39', '#2fa36b', '#8e5bd0', '#c9a227', '#1a9bb0', '#d9577a', '#7a8794'];
   function status(id) { return ready ? (parsed[id] || calcs[id] ? 'ok' : 'missing') : 'loading'; }
