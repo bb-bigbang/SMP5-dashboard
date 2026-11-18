@@ -33,7 +33,13 @@ html,body{margin:0;background:var(--color-bg);color:var(--color-fg);font-family:
   background-position:calc(100% - 14px) 55%,calc(100% - 9px) 55%;background-size:5px 5px;background-repeat:no-repeat}
 .dash-skeleton{position:relative;border-radius:8px;background:linear-gradient(90deg,var(--cds-chart-grid),var(--color-border-line),var(--cds-chart-grid));background-size:200% 100%;animation:sk 1.4s infinite}
 @keyframes sk{from{background-position:200% 0}to{background-position:-200% 0}}
-.sm-tabs{flex-wrap:wrap !important;overflow-x:visible !important;row-gap:6px}
+.tabnav{display:flex;align-items:center;gap:6px;max-width:100%;min-width:0}
+.tabnav .sm-tabs{flex:1 1 auto;min-width:0;scrollbar-width:thin !important;scroll-behavior:smooth;padding-bottom:6px}
+.tabnav .sm-tabs::-webkit-scrollbar{height:6px;display:block}
+.tabnav .sm-tabs::-webkit-scrollbar-thumb{background:var(--cds-chart-axis);border-radius:3px}
+.tabarrow{flex:0 0 auto;width:30px;height:30px;border-radius:50%;border:1px solid var(--color-border-line);background:var(--color-panel);color:var(--color-fg);font-size:18px;line-height:1;cursor:pointer;margin-bottom:6px}
+.tabarrow:disabled{opacity:.3;cursor:default}
+.tabcount{flex:0 0 auto;font-size:12px;color:var(--color-fg-muted);white-space:nowrap;margin-bottom:6px}
 .site-foot{max-width:1400px;margin:0 auto;padding:8px 16px 32px;color:var(--color-fg-muted);font-size:12px}
 
 
@@ -773,7 +779,7 @@ details.sm-foot li { margin: 4px 0; }
   </details>
 </div>
 </div>
-<div class="site-foot">สร้างไฟล์เมื่อ 18 Nov 2026 09:45 (เวลาไทย) · ข้อมูลเป็นสำเนา ณ วันที่ระบุในแต่ละแท็บ</div>
+<div class="site-foot">สร้างไฟล์เมื่อ 18 Nov 2026 09:52 (เวลาไทย) · ข้อมูลเป็นสำเนา ณ วันที่ระบุในแต่ละแท็บ</div>
 <script>
 (function () {
   var FILES = {"summary": "commodity_summary.csv", "weekly": "commodity_weekly.csv", "subcon": "subcon_weekly.csv", "pkgsum": "testpkg_summary.csv", "pkglist": "testpkg_list.csv", "itr": "itr_status.csv", "itrw": "itr_weekly.csv", "joints": "joints_summary.csv", "mech_steps": "mech_steps.csv", "mech_activity": "mech_activity.csv", "mech_itr": "mech_itr.csv", "mech_weekly": "mech_weekly.csv", "cms_progress": "cms_progress.csv", "cms_scurve": "cms_scurve.csv", "cms_mcqp": "cms_mcqp.csv", "manpower": "manpower_weekly.csv", "weld_weekly": "weld_weekly.csv", "weld_pkg": "weld_pkg.csv", "weld_mix": "weld_mix.csv", "cp_tags": "cp_tags.csv", "cms_bill": "cms_bill.csv", "cms_qty": "cms_qty.csv", "am_status": "am_status.csv", "am_pkg": "am_pkg.csv", "am_lag": "am_lag.csv", "recon_reason": "recon_reason.csv", "recon_pkg": "recon_pkg.csv"};
@@ -2943,6 +2949,30 @@ dash.draw('cpsubsys', (tb) => {
   }));
 });
 
+</script>
+<script>
+(function(){
+  var bar=document.querySelector('.sm-tabs'); if(!bar) return;
+  var tabs=bar.querySelectorAll('.sm-tab');
+  var nav=document.createElement('div'); nav.className='tabnav';
+  bar.parentNode.insertBefore(nav,bar);
+  var L=document.createElement('button'); L.className='tabarrow'; L.textContent='‹'; L.setAttribute('aria-label','แท็บก่อนหน้า');
+  var R=document.createElement('button'); R.className='tabarrow'; R.textContent='›'; R.setAttribute('aria-label','แท็บถัดไป');
+  var C=document.createElement('span'); C.className='tabcount';
+  nav.appendChild(L); nav.appendChild(bar); nav.appendChild(R); nav.appendChild(C);
+  function upd(){
+    L.disabled=bar.scrollLeft<=2; R.disabled=bar.scrollLeft+bar.clientWidth>=bar.scrollWidth-2;
+    var i=[].findIndex.call(tabs,function(t){return t.getAttribute('aria-selected')==='true'});
+    C.textContent='แท็บ '+(i+1)+'/'+tabs.length;
+  }
+  L.onclick=function(){bar.scrollBy({left:-bar.clientWidth*0.7})};
+  R.onclick=function(){bar.scrollBy({left:bar.clientWidth*0.7})};
+  bar.addEventListener('scroll',upd); window.addEventListener('resize',upd);
+  bar.addEventListener('click',function(e){var t=e.target.closest('.sm-tab'); if(t){t.scrollIntoView({block:'nearest',inline:'center'}); setTimeout(upd,50);}});
+  bar.addEventListener('wheel',function(e){if(Math.abs(e.deltaY)>Math.abs(e.deltaX)){bar.scrollLeft+=e.deltaY;e.preventDefault();}},{passive:false});
+  setTimeout(function(){var s=bar.querySelector('.sm-tab[aria-selected="true"]'); if(s) s.scrollIntoView({block:'nearest',inline:'center'}); upd();},300);
+  upd();
+})();
 </script>
 <script>window.__dashStart();</script>
 </body>
