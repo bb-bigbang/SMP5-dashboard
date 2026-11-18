@@ -1,0 +1,56 @@
+priority,priority_desc,activity,uom,original_key_date,priority_forecast_date,forecast_date,total,actual,remain,pct
+E08,Complete works for WTP (E08) Overall,Piping Welding,DB,,2026-08-28,2026-07-17,6129.75,6129.75,0.0,1.0
+E08,Complete works for WTP (E08) Overall,Piping Line Check (ITR 118A),Pkg,,2026-08-28,2026-07-10,135,135,0,1.0
+E08,Complete works for WTP (E08) Overall,Hydrotest (ITR 119A),Pkg,,2026-08-28,2026-07-16,169,169,0,1.0
+E08,Complete works for WTP (E08) Overall,Reinstatement (ITR 120A),Pkg,,2026-08-28,2026-07-31,298,298,0,1.0
+E08,Complete works for WTP (E08) Overall,Mechanical (ITR A),ea,,2026-08-28,2026-08-05,143,143,0,1.0
+E08,Complete works for WTP (E08) Overall,Mechanical (ITR A/B),ea,,2026-08-28,2026-08-05,148,146,2,0.99
+E08,Complete works for WTP (E08) Overall,Steel Structure,Pkg,,2026-08-28,2026-08-14,2,2,0,1.0
+E08,Complete works for WTP (E08) Overall,Painting & Insulation,Pkg,,2026-08-28,2026-08-21,23,23,0,1.0
+E04,Complete works for ETP (E04) Overall,Piping Welding,DB,,2026-11-27,2026-10-09,16657.75,15302.25,1355.5,0.92
+E04,Complete works for ETP (E04) Overall,Piping Line Check (ITR 118A),Pkg,,2026-11-27,2026-10-14,607,450,157,0.74
+E04,Complete works for ETP (E04) Overall,Hydrotest (ITR 119A),Pkg,,2026-11-27,2026-10-23,658,453,205,0.69
+E04,Complete works for ETP (E04) Overall,Reinstatement (ITR 120A),Pkg,,2026-11-27,2026-10-30,694,405,289,0.58
+E04,Complete works for ETP (E04) Overall,Mechanical (ITR A),ea,,2026-11-27,2026-11-06,694,139,555,0.2
+E04,Complete works for ETP (E04) Overall,Mechanical (ITR B),ea,,2026-11-27,2026-11-06,326,73,253,0.22
+E04,Complete works for ETP (E04) Overall,Steel Structure,Pkg,,2026-11-27,2026-11-12,90,34,56,0.38
+E04,Complete works for ETP (E04) Overall,Painting & Insulation,Pkg,,2026-11-27,2026-11-20,25,1,24,0.04
+E04-01,Complete works for ETP (E04) Cooling Water system and relevant sub-system,Piping Welding,DB,2026-03-15,2026-10-23,2026-08-31,4381.5,4381.5,0.0,1.0
+E04-01,Complete works for ETP (E04) Cooling Water system and relevant sub-system,Piping Line Check (ITR 118A),Pkg,2026-03-15,2026-10-23,2026-09-04,98,91,7,0.93
+E04-01,Complete works for ETP (E04) Cooling Water system and relevant sub-system,Hydrotest (ITR 119A),Pkg,2026-03-15,2026-10-23,2026-09-11,115,102,13,0.89
+E04-01,Complete works for ETP (E04) Cooling Water system and relevant sub-system,Reinstatement (ITR 120A),Pkg,2026-03-15,2026-10-23,2026-09-25,130,103,27,0.79
+E04-01,Complete works for ETP (E04) Cooling Water system and relevant sub-system,Mechanical (ITR A),Pkg,2026-03-15,2026-10-23,,63,46,17,0.73
+E04-01,Complete works for ETP (E04) Cooling Water system and relevant sub-system,Mechanical (ITR B),Pkg,2026-03-15,2026-10-23,2026-09-18,63,31,32,0.49
+E04-01,Complete works for ETP (E04) Cooling Water system and relevant sub-system,Painting & Insulation,Pkg,2026-03-15,2026-10-23,2026-09-25,11,1,10,0.09
+E04-02,Complete works for ETP (E04) Bacteria Growth up,Piping Welding,DB,2026-05-15,2026-11-30,2026-10-09,10974.5,9619,1355.5,0.88
+E04-02,Complete works for ETP (E04) Bacteria Growth up,Piping Line Check (ITR 118A),Pkg,2026-05-15,2026-11-30,2026-10-16,465,330,135,0.71
+E04-02,Complete works for ETP (E04) Bacteria Growth up,Hydrotest (ITR 119A),Pkg,2026-05-15,2026-11-30,2026-10-23,494,320,174,0.65
+E04-02,Complete works for ETP (E04) Bacteria Growth up,Reinstatement (ITR 120A),Pkg,2026-05-15,2026-11-30,2026-10-31,515,278,237,0.54
+E04-02,Complete works for ETP (E04) Bacteria Growth up,Mechanical (ITR A),Pkg,2026-05-15,2026-11-30,,237,82,155,0.35
+E04-02,Complete works for ETP (E04) Bacteria Growth up,Mechanical (ITR B),Pkg,2026-05-15,2026-11-30,2026-11-10,237,36,201,0.15
+E04-02,Complete works for ETP (E04) Bacteria Growth up,Steel Structure,Pkg,2026-05-15,2026-11-30,2026-11-13,90,34,56,0.38
+E04-02,Complete works for ETP (E04) Bacteria Growth up,Painting & Insulation,Pkg,2026-05-15,2026-11-30,2026-11-20,9,0,9,0.0
+E04-03,Complete works for ETP (E04) Remaining Scope,Piping Welding,DB,2026-07-31,2026-11-20,2026-10-09,1301.75,1301.75,0.0,1.0
+E04-03,Complete works for ETP (E04) Remaining Scope,Piping Line Check (ITR 118A),Pkg,2026-07-31,2026-11-20,2026-10-16,44,29,15,0.66
+E04-03,Complete works for ETP (E04) Remaining Scope,Hydrotest (ITR 119A),Pkg,2026-07-31,2026-11-20,2026-10-23,49,31,18,0.63
+E04-03,Complete works for ETP (E04) Remaining Scope,Reinstatement (ITR 120A),Pkg,2026-07-31,2026-11-20,2026-10-23,49,24,25,0.49
+E04-03,Complete works for ETP (E04) Remaining Scope,Mechanical (ITR A),Pkg,2026-07-31,2026-11-20,,26,11,15,0.42
+E04-03,Complete works for ETP (E04) Remaining Scope,Mechanical (ITR B),Pkg,2026-07-31,2026-11-20,2026-10-30,26,6,20,0.23
+E04-03,Complete works for ETP (E04) Remaining Scope,Painting & Insulation,Pkg,2026-07-31,2026-11-20,2026-10-06,5,0,5,0.0
+E07,Complete works for Flare (E07),Piping Welding,DB,2026-05-31,2026-09-18,2026-08-07,1800,1800,0,1.0
+E07,Complete works for Flare (E07),Piping Line Check (ITR 118A),Pkg,2026-05-31,2026-09-18,2026-08-14,56,54,2,0.96
+E07,Complete works for Flare (E07),Hydrotest (ITR 119A),Pkg,2026-05-31,2026-09-18,2026-08-28,63,59,4,0.94
+E07,Complete works for Flare (E07),Reinstatement (ITR 120A),Pkg,2026-05-31,2026-09-18,2026-08-28,107,87,20,0.81
+E07,Complete works for Flare (E07),Mechanical (ITR A),Pkg,2026-05-31,2026-09-18,2026-08-28,18,15,3,0.83
+E07,Complete works for Flare (E07),Mechanical (ITR B),Pkg,2026-05-31,2026-09-18,2026-08-28,18,11,7,0.61
+E07,Complete works for Flare (E07),Steel Structure,Pkg,2026-05-31,2026-09-18,2026-09-04,11,10,1,0.91
+E07,Complete works for Flare (E07),Painting & Insulation,Pkg,2026-05-31,2026-09-18,2026-09-11,26,4,22,0.15
+Overall,รวมทุก Priority,Piping Welding,DB,,,2026-10-09,24587.5,23232,1355.5,0.94
+Overall,รวมทุก Priority,Piping Line Check (ITR 118A),Pkg,,,2026-10-16,798,639,159,0.8
+Overall,รวมทุก Priority,Hydrotest (ITR 119A),Pkg,,,2026-10-23,890,681,209,0.77
+Overall,รวมทุก Priority,Reinstatement (ITR 120A),Pkg,,,2026-10-31,1099,790,309,0.72
+Overall,รวมทุก Priority,Mechanical (ITR A),Pkg,,,2026-11-10,487,297,190,0.61
+Overall,รวมทุก Priority,Mechanical (ITR B),Pkg,,,2026-11-13,492,230,262,0.47
+Overall,รวมทุก Priority,Steel Structure,Pkg,,,2026-11-13,103,46,57,0.45
+Overall,รวมทุก Priority,Painting & Insulation,Pkg,,,2026-11-20,74,28,46,0.38
+Overall,รวมทุก Priority,Summary Package,Pkg,,,2026-11-20,2255,1094,1161,0.49

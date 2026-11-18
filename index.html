@@ -1,0 +1,2763 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SMP5 Progress Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;600&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<style>
+:root{
+  --color-fg:#1d1d1b; --color-fg-muted:#6b6a66; --color-bg:#faf9f6; --color-panel:#ffffff; --color-border-line:#e4e2dc;
+  --color-ok:#2e8b57; --color-warn:#b7791f; --color-bad:#c53030;
+  --font-anthropic-sans:"IBM Plex Sans Thai","Noto Sans Thai",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-anthropic-serif:"IBM Plex Sans Thai","Noto Serif Thai",Georgia,serif;
+  --cds-font-size-caption:12px; --cds-font-size-body:14px; --cds-font-size-heading:16px; --cds-font-size-title:26px; --cds-font-weight-medium:600;
+  --cds-gap-xs:4px; --cds-gap-sm:8px; --cds-gap-md:12px; --cds-gap-lg:18px; --cds-gap-xl:28px;
+  --cds-pad-xs:4px; --cds-pad-sm:8px; --cds-pad-md:12px; --cds-pad-lg:16px; --cds-pad-xl:24px; --cds-radius:10px;
+  --cds-chart-muted:#c9c6bf; --cds-chart-status-critical:#c53030; --cds-chart-grid:#ecebe7; --cds-chart-axis:#cfccc5; --cds-chart-reference:#8a8780;
+  --cds-text-secondary:#6b6a66; --cds-surface-popover:#ffffff; --cds-border:#dcd9d2; --cds-shadow-popover:0 6px 20px rgba(0,0,0,.12);
+}
+@media (prefers-color-scheme: dark){ :root{
+  --color-fg:#ecebe7; --color-fg-muted:#a3a19b; --color-bg:#1b1b1a; --color-panel:#242423; --color-border-line:#3a3936;
+  --color-ok:#5cc28b; --color-warn:#e0b252; --color-bad:#ef6b6b;
+  --cds-chart-muted:#55534f; --cds-chart-grid:#33322f; --cds-chart-axis:#4a4945; --cds-chart-reference:#9b9892;
+  --cds-text-secondary:#a3a19b; --cds-surface-popover:#2c2c2a; --cds-border:#45443f; --cds-shadow-popover:0 6px 20px rgba(0,0,0,.5);
+}}
+[hidden]{display:none !important}
+html,body{margin:0;background:var(--color-bg);color:var(--color-fg);font-family:var(--font-anthropic-sans);font-size:14px;line-height:1.45}
+#dash-root{max-width:1400px;margin:0 auto;padding:16px}
+.dash-select{font:inherit;font-size:13px;color:var(--color-fg);background-color:var(--color-panel);border:1px solid var(--color-border-line);border-radius:8px;padding:5px 28px 5px 10px;
+  appearance:none;background-image:linear-gradient(45deg,transparent 50%,currentColor 50%),linear-gradient(135deg,currentColor 50%,transparent 50%);
+  background-position:calc(100% - 14px) 55%,calc(100% - 9px) 55%;background-size:5px 5px;background-repeat:no-repeat}
+.dash-skeleton{position:relative;border-radius:8px;background:linear-gradient(90deg,var(--cds-chart-grid),var(--color-border-line),var(--cds-chart-grid));background-size:200% 100%;animation:sk 1.4s infinite}
+@keyframes sk{from{background-position:200% 0}to{background-position:-200% 0}}
+.site-foot{max-width:1400px;margin:0 auto;padding:8px 16px 32px;color:var(--color-fg-muted);font-size:12px}
+
+
+.sm { display: flex; flex-direction: column; gap: var(--cds-gap-lg); font-family: var(--font-anthropic-sans); color: var(--color-fg); }
+.sm-head h1 { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); margin: 0; }
+.sm-sub { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); margin: var(--cds-gap-xs) 0 0; }
+.sm-bar { display: flex; flex-wrap: wrap; gap: var(--cds-gap-md); align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 3; background: var(--color-bg); padding: var(--cds-pad-sm) 0; border-bottom: 1px solid var(--color-border-line); }
+.sm-tabs { display: flex; gap: var(--cds-gap-xs); overflow-x: auto; scrollbar-width: none; max-width: 100%; }
+.sm-tab { appearance: none; border: 1px solid transparent; background: none; color: var(--color-fg-muted); font: inherit; font-size: var(--cds-font-size-body); padding: var(--cds-pad-xs) var(--cds-pad-md); border-radius: var(--cds-radius); cursor: pointer; white-space: nowrap; }
+.sm-tab:hover { color: var(--color-fg); }
+.sm-tab[aria-selected="true"] { color: var(--color-fg); background: var(--color-panel); border-color: var(--color-border-line); font-weight: var(--cds-font-weight-medium); }
+.sm-ctl { display: flex; gap: var(--cds-gap-sm); align-items: center; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); flex-wrap: wrap; }
+.sm-sec { display: flex; flex-direction: column; gap: var(--cds-gap-lg); }
+.sm-lead { font-size: var(--cds-font-size-heading); line-height: 1.5; margin: 0; max-width: 70ch; }
+.sm-lead b { font-weight: var(--cds-font-weight-medium); font-variant-numeric: tabular-nums; }
+.sm-kpis { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--cds-gap-md); }
+.sm-kpi { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-md) var(--cds-pad-lg); display: flex; flex-direction: column; gap: var(--cds-gap-xs); min-width: 0; }
+.sm-kl { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.sm-kv { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); font-variant-numeric: tabular-nums; min-height: 1.2em; }
+.sm-ks { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); font-variant-numeric: tabular-nums; }
+.sm-card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); display: flex; flex-direction: column; gap: var(--cds-gap-sm); min-width: 0; }
+.sm-card h2 { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: 0; }
+.sm-card .sm-note { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin: 0; }
+.sm-grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: var(--cds-gap-lg); }
+.sm-chart { position: relative; min-height: 220px; width: 100%; }
+.sm-chart.tall { min-height: 300px; }
+.sm-chart.short { min-height: 150px; }
+.sm-legend { display: flex; flex-wrap: wrap; gap: var(--cds-gap-md); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.sm-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: var(--cds-chart-muted); }
+.sw.line { height: 2px; width: 14px; border-radius: 0; }
+.sw.dashl { height: 0; width: 14px; border-top: 2px dashed var(--cds-chart-muted); background: none; border-radius: 0; }
+.sm-tw { overflow-x: auto; width: 100%; }
+.sm-t { border-collapse: collapse; width: 100%; font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; }
+.sm-t th, .sm-t td { padding: 6px 8px; border-bottom: 1px solid var(--color-border-line); text-align: right; white-space: nowrap; }
+.sm-t th { color: var(--color-fg-muted); font-weight: var(--cds-font-weight-medium); }
+.sm-t th:first-child, .sm-t td:first-child { text-align: left; }
+.sm-t td.l, .sm-t th.l { text-align: left; white-space: normal; min-width: 160px; }
+.sm-t tr.tot td { font-weight: var(--cds-font-weight-medium); }
+.sm-t tbody tr.sub td { font-weight: var(--cds-font-weight-medium); background-color: color-mix(in srgb, var(--color-fg) 8%, transparent); border-bottom: 2px solid var(--color-border-line); }
+.sm-t tbody tr.grand td { font-weight: var(--cds-font-weight-medium); background-color: color-mix(in srgb, var(--color-fg) 14%, transparent); border-top: 2px solid var(--color-fg-muted); }
+.sm-t tbody tr { cursor: pointer; transition: background-color .12s; }
+.sm-t tbody tr:nth-child(even) td { background-color: color-mix(in srgb, var(--color-fg) 3%, transparent); }
+.sm-t tbody tr:hover td { background-color: color-mix(in srgb, var(--color-fg) 7%, transparent); }
+.sm-t tbody tr.sm-sel td:not(.hm) { background-color: color-mix(in srgb, var(--color-warn) 22%, transparent); }
+.sm-t tbody tr.sm-sel td { box-shadow: inset 0 1px 0 var(--color-warn), inset 0 -1px 0 var(--color-warn); font-weight: var(--cds-font-weight-medium); }
+.sm-t tbody tr.sm-sel td:first-child { box-shadow: inset 3px 0 0 var(--color-warn), inset 0 1px 0 var(--color-warn), inset 0 -1px 0 var(--color-warn); }
+.sm-t td.hm { text-align: center; }
+.sm-pbar { display: inline-block; width: 60px; height: 6px; border-radius: 3px; background: var(--cds-chart-grid); vertical-align: middle; margin-left: 6px; overflow: hidden; }
+.sm-pbar i { display: block; height: 100%; }
+.sm-tag { display: inline-block; padding: 1px 6px; border-radius: 999px; font-size: var(--cds-font-size-caption); }
+.sm-tag.bad { color: var(--color-bad); border: 1px solid var(--color-bad); }
+.sm-tag.ok { color: var(--color-ok); border: 1px solid var(--color-ok); }
+.sm-tag.warn { color: var(--color-warn); border: 1px solid var(--color-warn); }
+.sm-tip { position: absolute; pointer-events: none; background: var(--cds-surface-popover); border: 1px solid var(--cds-border); box-shadow: var(--cds-shadow-popover); border-radius: var(--cds-radius); padding: 6px 8px; font-size: var(--cds-font-size-caption); color: var(--color-fg); white-space: nowrap; z-index: 5; font-variant-numeric: tabular-nums; }
+.sm-tip .h { color: var(--cds-text-secondary); margin-bottom: 2px; }
+.sm-chart svg text { fill: var(--cds-text-secondary); font-size: var(--cds-font-size-caption); font-family: var(--font-anthropic-sans); }
+.sm-chart svg .domain, .sm-chart svg .tick line { stroke: var(--cds-chart-axis); }
+.sm-chart svg .grid line { stroke: var(--cds-chart-grid); }
+.sm-chart svg .grid .domain { display: none; }
+.sm-fail { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); padding: var(--cds-pad-md) 0; }
+.sm-skel { height: 180px; }
+.sm-mult { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: var(--cds-gap-md); }
+.sm-mult .sm-chart { min-height: 150px; }
+.sm-mtitle { font-size: var(--cds-font-size-caption); font-weight: var(--cds-font-weight-medium); }
+[data-dash-source-state=refreshing] { opacity: .5; }
+details.sm-foot { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+details.sm-foot li { margin: 4px 0; }
+</style>
+</head>
+<body>
+<div id="dash-root">
+<div class="sm">
+  <header class="sm-head" id="top">
+    <h1>SMP5 Piping Commodity</h1>
+    <p class="sub sm-sub">ข้อมูลจากไฟล์ 261113_SMP5_Piping_Commodity_a · Commodity actual ถึงสัปดาห์ที่สิ้นสุด 6 พ.ย. 2026 · Test package ตามชีท SUM (9–16 พ.ย. 2026) · ITR ตาม GREEN TABLE (ถึง 13 พ.ย. 2026)</p>
+  </header>
+
+  <div class="sm-bar">
+    <div class="sm-tabs" role="tablist" aria-label="หน้า dashboard">
+      <button class="sm-tab" role="tab" aria-selected="true" aria-controls="overview" data-tab="overview">ภาพรวม (Weekly)</button>
+      <button class="sm-tab" role="tab" aria-selected="false" aria-controls="scurve" data-tab="scurve">1 · S-Curve</button>
+      <button class="sm-tab" role="tab" aria-selected="false" aria-controls="testpkg" data-tab="testpkg">2 · Test Package</button>
+      <button class="sm-tab" role="tab" aria-selected="false" aria-controls="priority" data-tab="priority">3 · Forecast vs Actual</button>
+      <button class="sm-tab" role="tab" aria-selected="false" aria-controls="itr" data-tab="itr">4 · MC Readiness / ITR</button>
+      <button class="sm-tab" role="tab" aria-selected="false" aria-controls="weld" data-tab="weld">5 · Welding &amp; QC</button>
+      <button class="sm-tab" role="tab" aria-selected="false" aria-controls="mech" data-tab="mech">6 · Mechanical</button>
+      <button class="sm-tab" role="tab" aria-selected="false" aria-controls="progress" data-tab="progress">7 · Progress &amp; Manpower</button>
+      <button class="sm-tab" role="tab" aria-selected="false" aria-controls="weldlog" data-tab="weldlog">9 · Weld Log (RMC)</button>
+      <button class="sm-tab" role="tab" aria-selected="false" aria-controls="compl" data-tab="compl">11 · Completion Forecast</button>
+    </div>
+    <label class="sm-ctl">Priority
+      <select class="dash-select" id="prio-select" aria-label="Priority">
+        <option value="Overall">รวมทุก Priority</option>
+        <option value="E08">E08 · WTP</option>
+        <option value="E04">E04 · ETP (รวม)</option>
+        <option value="E04-01">E04-01 · Cooling Water</option>
+        <option value="E04-02">E04-02 · Bacteria Growth up</option>
+        <option value="E04-03">E04-03 · Remaining Scope</option>
+        <option value="E07">E07 · Flare</option>
+      </select>
+    </label>
+  </div>
+
+  <!-- ===================== OVERVIEW ===================== -->
+  <section id="overview" class="sm-sec" role="tabpanel">
+    <p class="sm-lead">งานเชื่อมท่อเสร็จ <b data-draw="kpi" data-k="c|Piping Welding|pct">—</b> ของ scope (คงเหลือ <b data-draw="kpi" data-k="c|Piping Welding|remain">—</b> DB) · Test package ผ่าน Reinstatement (ITR 120A) แล้ว <b data-draw="kpi" data-k="p|ri_pct">—</b> · ITR check sheet เสร็จ <b data-draw="kpi" data-k="i|pct">—</b></p>
+    <div class="sm-kpis">
+      <div class="sm-kpi"><span class="sm-kl">Overall progress (CMS)</span><span class="sm-kv" data-draw="pkpi" data-k="actual">—</span><span class="sm-ks">Forecast-3 <span data-draw="pkpi" data-k="forecast">—</span> · ต่าง <span data-draw="pkpi" data-k="var_forecast">—</span></span></div>
+      <div class="sm-kpi"><span class="sm-kl">Piping Welding (DB)</span><span class="sm-kv" data-draw="kpi" data-k="c|Piping Welding|actual">—</span><span class="sm-ks">จาก <span data-draw="kpi" data-k="c|Piping Welding|total">—</span> DB</span></div>
+      <div class="sm-kpi"><span class="sm-kl">Line Check 118A</span><span class="sm-kv" data-draw="kpi" data-k="p|lc_pct">—</span><span class="sm-ks">คงเหลือ <span data-draw="kpi" data-k="p|lc_remain">—</span> pkg</span></div>
+      <div class="sm-kpi"><span class="sm-kl">Pressure Test 119A</span><span class="sm-kv" data-draw="kpi" data-k="p|ht_pct">—</span><span class="sm-ks">คงเหลือ <span data-draw="kpi" data-k="p|ht_remain">—</span> pkg</span></div>
+      <div class="sm-kpi"><span class="sm-kl">Reinstatement 120A</span><span class="sm-kv" data-draw="kpi" data-k="p|ri_pct">—</span><span class="sm-ks">คงเหลือ <span data-draw="kpi" data-k="p|ri_remain">—</span> pkg</span></div>
+      <div class="sm-kpi"><span class="sm-kl">Test package สัปดาห์นี้</span><span class="sm-kv" data-draw="kpi" data-k="p|week_total">—</span><span class="sm-ks">118A <b data-draw="kpi" data-k="p|lc_week">—</b> · 119A <b data-draw="kpi" data-k="p|ht_week">—</b> · 120A <b data-draw="kpi" data-k="p|ri_week">—</b> pkg/wk</span></div>
+      <div class="sm-kpi"><span class="sm-kl">ITR check sheet คงเหลือ</span><span class="sm-kv" data-draw="kpi" data-k="i|remaining">—</span><span class="sm-ks">จาก <span data-draw="kpi" data-k="i|total">—</span> sheets</span></div>
+    </div>
+    <div class="sm-grid2">
+      <div class="sm-card" id="ov-scurve">
+        <h2>S-Curve งานเชื่อม (สะสม, DB)</h2>
+        <div class="sm-legend"><span><i class="sw line" data-c="0"></i>Actual สะสม</span><span><i class="sw dashl"></i>Plan FC-4 สะสม</span><span><i class="sw dashl" data-ref="1"></i>Total scope</span></div>
+        <div class="sm-chart" data-draw="scurve" data-act="Piping Welding" data-source="weekly summary"></div>
+      </div>
+      <div class="sm-card" id="ov-stages">
+        <h2>Test package แยกตามขั้นตอน</h2>
+        <div class="sm-legend"><span><i class="sw" data-c="1"></i>UJV ทำแล้ว</span><span><i class="sw" data-c="0"></i>SMP5 สะสม</span><span><i class="sw"></i>คงเหลือ</span></div>
+        <div class="sm-chart short" data-draw="stages" data-source="pkg_totals"></div>
+      </div>
+    </div>
+    <div class="sm-grid2">
+      <div class="sm-card" id="ov-heat">
+        <h2>% Complete ราย Priority × Activity</h2>
+        <p class="sm-note">ตัวเลขจากชีท Pkg Commodity · คอลัมน์ Area % = Weighted progress (man-hour) จาก CMS · สีเข้ม = ใกล้เสร็จ</p>
+        <div class="sm-tw" data-draw="prioheat" data-source="summary cms_progress"></div>
+      </div>
+      <div class="sm-card" id="ov-constraints">
+        <h2>Package ที่ยังไม่ Reinstate ติดอะไรอยู่ (แยก Priority)</h2>
+        <div class="sm-legend" data-draw="conslegend"></div>
+        <div class="sm-chart" data-draw="constraints" data-source="constraints"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 1 S-CURVE ===================== -->
+  <section id="scurve" class="sm-sec" role="tabpanel" hidden>
+    <label class="sm-ctl">Activity
+      <select class="dash-select" id="act-select" aria-label="Activity">
+        <option>Piping Welding</option>
+        <option>Piping Line Check (ITR 118A)</option>
+        <option>Hydrotest (ITR 119A)</option>
+        <option>Reinstatement (ITR 120A)</option>
+        <option>Mechanical (ITR A)</option>
+        <option>Mechanical (ITR B)</option>
+        <option>Steel Structure</option>
+        <option>Painting &amp; Insulation</option>
+        <option>Summary Package</option>
+      </select>
+    </label>
+    <div class="sm-kpis">
+      <div class="sm-kpi"><span class="sm-kl">Total scope</span><span class="sm-kv" data-draw="kpi" data-k="c|@|total">—</span><span class="sm-ks" data-draw="kpi" data-k="c|@|uom">—</span></div>
+      <div class="sm-kpi"><span class="sm-kl">Actual สะสม</span><span class="sm-kv" data-draw="kpi" data-k="c|@|actual">—</span><span class="sm-ks"><span data-draw="kpi" data-k="c|@|pct">—</span> complete</span></div>
+      <div class="sm-kpi"><span class="sm-kl">คงเหลือ</span><span class="sm-kv" data-draw="kpi" data-k="c|@|remain">—</span><span class="sm-ks">Forecast เสร็จ <span data-draw="kpi" data-k="c|@|forecast_date">—</span></span></div>
+      <div class="sm-kpi"><span class="sm-kl">Actual สัปดาห์ล่าสุด</span><span class="sm-kv" data-draw="kpi" data-k="r|@|last_inc">—</span><span class="sm-ks">สัปดาห์สิ้นสุด <span data-draw="kpi" data-k="r|@|last_week">—</span></span></div>
+      <div class="sm-kpi"><span class="sm-kl">เฉลี่ย 4 สัปดาห์ล่าสุด</span><span class="sm-kv" data-draw="kpi" data-k="r|@|avg4">—</span><span class="sm-ks">ต่อสัปดาห์</span></div>
+      <div class="sm-kpi"><span class="sm-kl">สัปดาห์ที่ต้องใช้อีก</span><span class="sm-kv" data-draw="kpi" data-k="r|@|weeks_needed">—</span><span class="sm-ks">ถ้าทำได้เท่าค่าเฉลี่ย 4 สัปดาห์</span></div>
+    </div>
+    <div class="sm-card" id="sc-cum">
+      <h2>สะสม: Plan FC-4 เทียบ Actual</h2>
+      <div class="sm-legend"><span><i class="sw line" data-c="0"></i>Actual สะสม</span><span><i class="sw dashl"></i>Plan FC-4 สะสม</span><span><i class="sw dashl" data-ref="1"></i>Total scope</span></div>
+      <div class="sm-chart tall" data-draw="scurve" data-act="@" data-source="weekly summary"></div>
+      <p class="sm-note">ถ้าเส้น Plan FC-4 ไม่แตะ Total scope แปลว่าในไฟล์ยังไม่มีแผนรายสัปดาห์สำหรับงานส่วนที่เหลือ</p>
+    </div>
+    <div class="sm-card" id="sc-weekly">
+      <h2>รายสัปดาห์: Plan FC-4 เทียบ Actual</h2>
+      <div class="sm-legend"><span><i class="sw" data-c="0"></i>Actual</span><span><i class="sw"></i>Plan FC-4</span></div>
+      <div class="sm-chart" data-draw="weeklybars" data-source="weekly"></div>
+    </div>
+  </section>
+
+  <!-- ===================== 2 TEST PACKAGE ===================== -->
+  <section id="testpkg" class="sm-sec" role="tabpanel" hidden>
+    <div class="sm-kpis">
+      <div class="sm-kpi"><span class="sm-kl">Test package ทั้งหมด</span><span class="sm-kv" data-draw="kpi" data-k="p|total">—</span><span class="sm-ks">ตามชีท SUM</span></div>
+      <div class="sm-kpi"><span class="sm-kl">118A Line Check</span><span class="sm-kv" data-draw="kpi" data-k="p|lc_pct">—</span><span class="sm-ks">สัปดาห์นี้ <span data-draw="kpi" data-k="p|lc_week">—</span> · เหลือ <span data-draw="kpi" data-k="p|lc_remain">—</span></span></div>
+      <div class="sm-kpi"><span class="sm-kl">119A Pressure Test</span><span class="sm-kv" data-draw="kpi" data-k="p|ht_pct">—</span><span class="sm-ks">สัปดาห์นี้ <span data-draw="kpi" data-k="p|ht_week">—</span> · เหลือ <span data-draw="kpi" data-k="p|ht_remain">—</span></span></div>
+      <div class="sm-kpi"><span class="sm-kl">120A Reinstatement</span><span class="sm-kv" data-draw="kpi" data-k="p|ri_pct">—</span><span class="sm-ks">สัปดาห์นี้ <span data-draw="kpi" data-k="p|ri_week">—</span> · เหลือ <span data-draw="kpi" data-k="p|ri_remain">—</span></span></div>
+      <div class="sm-kpi"><span class="sm-kl">Backlog 120A</span><span class="sm-kv" data-draw="kpi" data-k="p|ri_backlog">—</span><span class="sm-ks">ผ่าน 119A แล้วแต่ยังไม่ Reinstate</span></div>
+    </div>
+    <div class="sm-card" id="tp-stages">
+      <h2>ความคืบหน้าแต่ละขั้น (Package)</h2>
+      <div class="sm-legend"><span><i class="sw" data-c="1"></i>UJV ทำแล้ว</span><span><i class="sw" data-c="0"></i>SMP5 สะสม</span><span><i class="sw"></i>คงเหลือ</span></div>
+      <div class="sm-chart short" data-draw="stages" data-source="pkg_totals"></div>
+    </div>
+    <div class="sm-card" id="tp-cons-table">
+      <h2>ปัญหา × Priority (จำนวน package ที่ยังไม่ Reinstate)</h2>
+      <div class="sm-tw">
+        <table class="sm-t" data-source="constraints">
+          <thead data-draw="consthead"></thead>
+          <tbody data-draw="constable"></tbody>
+        </table>
+      </div>
+      <p class="sm-note">จากคอลัมน์ Summary ในชีท Piping Package · E08-01A/E08-02A นับรวมใน E08-01/E08-02 · “ไม่ระบุ Priority” = package ที่ไม่มีค่า Priority 01 ในไฟล์</p>
+    </div>
+
+    <div class="sm-card" id="tp-table">
+      <h2>สรุปราย WBS (ชีท SUM)</h2>
+      <div class="sm-tw">
+        <table class="sm-t" data-source="pkgsum pkg_totals" data-row-key="wbs">
+          <thead>
+            <tr><th>WBS</th><th data-field="total">Total</th><th data-field="lc_acc">118A สะสม</th><th data-field="lc_week">118A wk</th><th data-field="lc_remain">118A เหลือ</th><th data-field="ht_acc">119A สะสม</th><th data-field="ht_week">119A wk</th><th data-field="ht_remain">119A เหลือ</th><th data-field="ri_acc">120A สะสม</th><th data-field="ri_week">120A wk</th><th data-field="ri_remain">120A เหลือ</th><th data-field="ri_backlog">120A backlog</th></tr>
+          </thead>
+          <tbody data-draw="pkgtable"></tbody>
+        </table>
+      </div>
+      <p class="sm-note">“สะสม” นับเฉพาะที่ SMP5 ทำ (ไม่รวมที่ UJV ทำไว้แล้ว) · ตารางนี้แสดงทุก WBS ไม่ขึ้นกับตัวกรอง</p>
+    </div>
+    <div class="sm-grid2">
+      <div class="sm-card" id="tp-weekly">
+        <h2>ITR ที่ปิดได้รายสัปดาห์ (12 สัปดาห์ล่าสุด)</h2>
+        <div class="sm-legend"><span><i class="sw" data-c="0"></i>118A</span><span><i class="sw" data-c="1"></i>119A</span><span><i class="sw" data-c="2"></i>120A</span></div>
+        <div class="sm-chart" data-draw="pkgweekly" data-source="pkg_weekly"></div>
+        <p class="sm-note">นับจากวันที่ ITR ในรายการ Piping Package (สัปดาห์สิ้นสุดวันศุกร์) อาจต่างจากชีท SUM เล็กน้อย</p>
+      </div>
+      <div class="sm-card" id="tp-constraints">
+        <h2>Package ที่ยังไม่ Reinstate ติดอะไรอยู่ (แยก Priority)</h2>
+        <div class="sm-legend" data-draw="conslegend"></div>
+        <div class="sm-chart" data-draw="constraints" data-source="constraints"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 3 FORECAST vs ACTUAL ===================== -->
+  <section id="priority" class="sm-sec" role="tabpanel" hidden>
+    <div class="sm-kpis">
+      <div class="sm-kpi"><span class="sm-kl">Original key date</span><span class="sm-kv" data-draw="kpi" data-k="c|Piping Welding|original_key_date">—</span><span class="sm-ks">ของ Priority ที่เลือก</span></div>
+      <div class="sm-kpi"><span class="sm-kl">Forecast MCQP</span><span class="sm-kv" data-draw="kpi" data-k="c|Piping Welding|priority_forecast_date">—</span><span class="sm-ks">ของ Priority ที่เลือก</span></div>
+    </div>
+    <div class="sm-card" id="pr-table">
+      <h2>ทุก Activity ของ Priority ที่เลือก</h2>
+      <div class="sm-tw">
+        <table class="sm-t" data-source="summary" data-row-key="priority,activity">
+          <thead><tr><th class="l">Activity</th><th>UOM</th><th data-field="total">Total</th><th data-field="actual">Actual</th><th data-field="remain">คงเหลือ</th><th data-field="pct">%</th><th data-field="forecast_date">Forecast เสร็จ</th><th>สถานะ</th></tr></thead>
+          <tbody data-draw="prtable"></tbody>
+        </table>
+      </div>
+      <p class="sm-note">สถานะ “เลย Forecast” = ยังมีงานเหลือและเลยวันที่ Forecast แล้ว (เทียบกับวันที่ข้อมูล 13 พ.ย. 2026)</p>
+    </div>
+    <div class="sm-card" id="pr-mult">
+      <h2>Plan FC-4 เทียบ Actual สะสม แยก Activity</h2>
+      <div class="sm-legend"><span><i class="sw line" data-c="0"></i>Actual สะสม</span><span><i class="sw dashl"></i>Plan FC-4 สะสม</span><span><i class="sw dashl" data-ref="1"></i>Total</span></div>
+      <div class="sm-mult" data-draw="multiples" data-source="weekly summary"></div>
+    </div>
+    <div class="sm-card" id="pr-heat">
+      <h2>% Complete ทุก Priority</h2>
+      <div class="sm-tw" data-draw="prioheat" data-source="summary cms_progress"></div>
+    </div>
+  </section>
+
+  <!-- ===================== 4 ITR ===================== -->
+  <section id="itr" class="sm-sec" role="tabpanel" hidden>
+    <p class="sm-note sm-ks">ITR แยกได้ระดับ WBS (E04 / E07 / E08) เท่านั้น ถ้าเลือก E04-01 ถึง E04-03 จะแสดงของ E04 ทั้งหมด</p>
+    <div class="sm-kpis">
+      <div class="sm-kpi"><span class="sm-kl">Check sheet ทั้งหมด</span><span class="sm-kv" data-draw="kpi" data-k="i|total">—</span><span class="sm-ks">A + B</span></div>
+      <div class="sm-kpi"><span class="sm-kl">เสร็จแล้ว</span><span class="sm-kv" data-draw="kpi" data-k="i|completed">—</span><span class="sm-ks"><span data-draw="kpi" data-k="i|pct">—</span> complete</span></div>
+      <div class="sm-kpi"><span class="sm-kl">คงเหลือ</span><span class="sm-kv" data-draw="kpi" data-k="i|remaining">—</span><span class="sm-ks">sheets</span></div>
+      <div class="sm-kpi"><span class="sm-kl">A Check Sheet</span><span class="sm-kv" data-draw="kpi" data-k="i|a_pct">—</span><span class="sm-ks"><span data-draw="kpi" data-k="i|a_done">—</span> / <span data-draw="kpi" data-k="i|a_total">—</span></span></div>
+      <div class="sm-kpi"><span class="sm-kl">B Check Sheet</span><span class="sm-kv" data-draw="kpi" data-k="i|b_pct">—</span><span class="sm-ks"><span data-draw="kpi" data-k="i|b_done">—</span> / <span data-draw="kpi" data-k="i|b_total">—</span></span></div>
+    </div>
+    <div class="sm-grid2">
+      <div class="sm-card" id="itr-disc">
+        <h2>แยกตาม Discipline</h2>
+        <div class="sm-legend"><span><i class="sw" data-c="0"></i>เสร็จ</span><span><i class="sw"></i>คงเหลือ</span></div>
+        <div class="sm-chart" data-draw="itrdisc" data-source="itr"></div>
+      </div>
+      <div class="sm-card" id="itr-burn">
+        <h2>Check sheet ที่เสร็จสะสม (รายสัปดาห์ 2026)</h2>
+        <div class="sm-legend"><span><i class="sw line" data-c="0"></i>เสร็จสะสม</span><span><i class="sw dashl" data-ref="1"></i>ทั้งหมด</span></div>
+        <div class="sm-chart" data-draw="itrburn" data-source="itrw itr"></div>
+        <p class="sm-note">จุดแรกรวมทุก sheet ที่เสร็จก่อนปี 2026</p>
+      </div>
+    </div>
+    <div class="sm-card" id="itr-heat">
+      <h2>Sub-system ที่เหลือ ITR มากที่สุด (เสร็จ / ทั้งหมด)</h2>
+      <div class="sm-tw" data-draw="itrheat" data-source="itr"></div>
+    </div>
+  </section>
+
+  <!-- ===================== 5 WELDING & QC ===================== -->
+  <section id="weld" class="sm-sec" role="tabpanel" hidden>
+    <div class="sm-grid2">
+      <div class="sm-card" id="wd-sub">
+        <h2>DB รายสัปดาห์แยกผู้รับเหมา</h2>
+        <div class="sm-legend" data-draw="sublegend"></div>
+        <div class="sm-chart" data-draw="subweekly" data-source="subcon"></div>
+        <p class="sm-note">จากแถวผู้รับเหมา (RMC / LMC / SHI / SWR) ในชีท Pkg Commodity</p>
+      </div>
+      <div class="sm-card" id="wd-subtable">
+        <h2>สรุปตามผู้รับเหมา</h2>
+        <div class="sm-tw">
+          <table class="sm-t" data-source="subcon_totals" data-row-key="priority,subcon">
+            <thead><tr><th>ผู้รับเหมา</th><th data-field="db">DB รวม</th><th data-field="last4">DB 4 สัปดาห์ล่าสุด</th><th data-field="best">สัปดาห์ที่ดีที่สุด</th><th data-field="weeks">จำนวนสัปดาห์</th></tr></thead>
+            <tbody data-draw="subtable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="sm-card" id="wd-mat">
+      <h2>Joint แยกตามวัสดุ (Input DB)</h2>
+      <div class="sm-legend"><span><i class="sw" data-c="0"></i>Joint ที่เชื่อมแล้ว</span><span><i class="sw"></i>ยังไม่มีวันเชื่อม</span></div>
+      <div class="sm-chart" data-draw="jointmat" data-source="joint_mat"></div>
+    </div>
+    <div class="sm-card" id="wd-qc">
+      <h2>QC: RT/PAUT ต่อวัสดุ</h2>
+      <div class="sm-tw">
+        <table class="sm-t" data-source="joint_mat" data-row-key="key,material">
+          <thead><tr><th>วัสดุ</th><th data-field="joints">Joint ทั้งหมด</th><th data-field="welded">เชื่อมแล้ว</th><th data-field="db">DB ที่เชื่อม</th><th data-field="rt">RT/PAUT report</th><th data-field="rt_rate">RT/PAUT ต่อ 100 joint ที่เชื่อม</th></tr></thead>
+          <tbody data-draw="qctable"></tbody>
+        </table>
+      </div>
+      <p class="sm-note">Input DB มีวันเชื่อมถึง 2 ต.ค. 2026 และนับ joint รวม thread/support จึงมี DB รวมสูงกว่าตัวเลขในรายงาน progress ใช้ดูสัดส่วนเท่านั้น</p>
+    </div>
+  </section>
+
+  <!-- ===================== 6 MECHANICAL ===================== -->
+  <section id="mech" class="sm-sec" role="tabpanel" hidden>
+    <p class="sm-note sm-ks">ข้อมูลจากไฟล์ 261113_SMP5_Mechanical_Package_Status · ITR ถึง 13 พ.ย. 2026 · ชีท Sum ไม่มีแยก E08-02</p>
+    <div class="sm-kpis">
+      <div class="sm-kpi"><span class="sm-kl">Equipment ทั้งหมด</span><span class="sm-kv" data-draw="mkpi" data-k="total">—</span><span class="sm-ks">Static <span data-draw="mkpi" data-k="static">—</span> · Rotating <span data-draw="mkpi" data-k="rotating">—</span></span></div>
+      <div class="sm-kpi"><span class="sm-kl">Step 2 Installation</span><span class="sm-kv" data-draw="mkpi" data-k="step2_pct">—</span><span class="sm-ks"><span data-draw="mkpi" data-k="step2">—</span> ตัว</span></div>
+      <div class="sm-kpi"><span class="sm-kl">Step 3 Alignment</span><span class="sm-kv" data-draw="mkpi" data-k="step3_pct">—</span><span class="sm-ks"><span data-draw="mkpi" data-k="step3">—</span> ตัว</span></div>
+      <div class="sm-kpi"><span class="sm-kl">Step 4 Final Inspection / Box-up</span><span class="sm-kv" data-draw="mkpi" data-k="step4_pct">—</span><span class="sm-ks"><span data-draw="mkpi" data-k="step4">—</span> ตัว</span></div>
+      <div class="sm-kpi"><span class="sm-kl">Mechanical ITR เสร็จ</span><span class="sm-kv" data-draw="mkpi" data-k="itr_pct">—</span><span class="sm-ks"><span data-draw="mkpi" data-k="itr_done">—</span> / <span data-draw="mkpi" data-k="itr_required">—</span> sheets</span></div>
+      <div class="sm-kpi"><span class="sm-kl">ITR-A / ITR-B</span><span class="sm-kv"><span data-draw="mkpi" data-k="a_pct">—</span> / <span data-draw="mkpi" data-k="b_pct">—</span></span><span class="sm-ks">% เสร็จ</span></div>
+    </div>
+    <div class="sm-grid2">
+      <div class="sm-card" id="mech-steps">
+        <h2>Equipment ผ่านแต่ละ Step</h2>
+        <div class="sm-legend"><span><i class="sw" data-c="0"></i>ผ่านแล้ว</span><span><i class="sw"></i>คงเหลือ</span></div>
+        <div class="sm-chart short" data-draw="mechsteps" data-source="mech_totals"></div>
+      </div>
+      <div class="sm-card" id="mech-burn">
+        <h2>Mechanical ITR ที่เสร็จสะสม (รายสัปดาห์ 2026)</h2>
+        <div class="sm-legend"><span><i class="sw line" data-c="0"></i>เสร็จสะสม</span><span><i class="sw dashl" data-ref="1"></i>ทั้งหมดที่ต้องทำ</span></div>
+        <div class="sm-chart" data-draw="mechburn" data-source="mech_weekly mech_itr"></div>
+        <p class="sm-note">จุดแรกรวมทุก sheet ที่เสร็จก่อนปี 2026</p>
+      </div>
+    </div>
+    <div class="sm-card" id="mech-area">
+      <h2>Step ราย Area</h2>
+      <div class="sm-tw">
+        <table class="sm-t" data-source="mech_steps" data-row-key="area">
+          <thead><tr><th>Area</th><th data-field="static">Static</th><th data-field="rotating">Rotating</th><th data-field="total">Total</th><th data-field="step1">Step 1 Prep</th><th data-field="step2">Step 2 Install</th><th data-field="step3">Step 3 Align</th><th data-field="step4">Step 4 Final/Box-up</th></tr></thead>
+          <tbody data-draw="mechareatable"></tbody>
+        </table>
+      </div>
+      <p class="sm-note">ตารางนี้แสดงทุก Area ไม่ขึ้นกับตัวกรอง · สีเข้ม = ผ่านแล้วสัดส่วนสูง</p>
+    </div>
+    <div class="sm-card" id="mech-act">
+      <h2>งานติดตั้งราย Activity (ชีท Sum)</h2>
+      <div class="sm-tw">
+        <table class="sm-t" data-source="mech_act" data-row-key="key,activity">
+          <thead><tr><th class="l">Activity</th><th class="l">ITR</th><th data-field="total">Total</th><th data-field="actual_work">Actual work</th><th data-field="actual_itr">Actual ITR</th><th data-field="remain">คงเหลือ</th><th data-field="itr_pct">% ITR</th></tr></thead>
+          <tbody data-draw="mechact"></tbody>
+        </table>
+      </div>
+      <p class="sm-note">Actual work ของ Final Alignment ในไฟล์เป็น #REF! จึงแสดงเป็น —</p>
+    </div>
+    <div class="sm-card" id="mech-itr">
+      <h2>ITR แต่ละประเภท (เรียงตามที่เหลือมากสุด)</h2>
+      <div class="sm-legend"><span><i class="sw" data-c="0"></i>เสร็จ</span><span><i class="sw"></i>คงเหลือ</span></div>
+      <div class="sm-chart" data-draw="mechitr" data-source="mech_itr"></div>
+    </div>
+  </section>
+
+  <!-- ===================== 7 PROGRESS & MANPOWER ===================== -->
+  <section id="progress" class="sm-sec" role="tabpanel" hidden>
+    <p class="sm-note sm-ks">Weighted progress (man-hour basis, Current Qty) จาก CMS 261113 (cut-off 13 พ.ย. 2026) · Manpower จาก Manpower Loading 261106 (cut-off 6 พ.ย. 2026)</p>
+    <div class="sm-kpis">
+      <div class="sm-kpi"><span class="sm-kl">Actual สะสม</span><span class="sm-kv" data-draw="pkpi" data-k="actual">—</span><span class="sm-ks">สัปดาห์นี้ +<span data-draw="pkpi" data-k="wk_actual">—</span></span></div>
+      <div class="sm-kpi"><span class="sm-kl">Forecast-3 สะสม</span><span class="sm-kv" data-draw="pkpi" data-k="forecast">—</span><span class="sm-ks">สัปดาห์นี้ +<span data-draw="pkpi" data-k="wk_forecast">—</span></span></div>
+      <div class="sm-kpi"><span class="sm-kl">ส่วนต่าง vs Forecast-3</span><span class="sm-kv" data-draw="pkpi" data-k="var_forecast">—</span><span class="sm-ks">vs Plan <span data-draw="pkpi" data-k="var_plan">—</span></span></div>
+      <div class="sm-kpi"><span class="sm-kl">Earned MHrs</span><span class="sm-kv" data-draw="pkpi" data-k="earned_mhrs">—</span><span class="sm-ks">จาก <span data-draw="pkpi" data-k="mhrs">—</span> MHrs</span></div>
+      <div class="sm-kpi"><span class="sm-kl">Direct manpower สัปดาห์ล่าสุด</span><span class="sm-kv" data-draw="mpkpi" data-k="actual">—</span><span class="sm-ks">Forecast-3 <span data-draw="mpkpi" data-k="forecast">—</span> · Plan <span data-draw="mpkpi" data-k="plan">—</span></span></div>
+    </div>
+    <div class="sm-card" id="pg-scurve">
+      <h2>S-Curve ความก้าวหน้ารวม + แท่งรายสัปดาห์ (weighted %)</h2>
+      <div class="sm-legend"><span><i class="sw line" data-c="0"></i>Actual สะสม</span><span><i class="sw line" data-c="1"></i>Forecast-3 สะสม</span><span><i class="sw dashl"></i>Plan (baseline)</span><span><i class="sw" data-c="0"></i>Actual รายสัปดาห์</span><span><i class="sw" data-c="1"></i>F-3 รายสัปดาห์</span></div>
+      <div class="sm-chart tall" data-draw="pgscurve" data-source="cms_scurve"></div>
+    </div>
+    <div class="sm-card" id="pg-disc">
+      <h2>Progress ราย Discipline</h2>
+      <div class="sm-legend"><span><i class="sw" data-c="0"></i>Actual</span><span><i class="sw line" data-c="1"></i>Forecast-3 (เส้นกำกับ)</span></div>
+      <div class="sm-chart short" data-draw="pgdisc" data-source="cms_disc"></div>
+      <p class="sm-note">Equipment Installation, Insulation และ Steam Tracing ไม่มี Forecast-3 ใน CMS (#DIV/0!) จึงไม่มีเส้นกำกับ</p>
+    </div>
+    <div class="sm-card" id="pg-table">
+      <h2>ตาราง Progress ราย Priority × Discipline</h2>
+      <div class="sm-tw">
+        <table class="sm-t" data-source="cms_progress" data-row-key="key,name">
+          <thead><tr><th class="l">Priority / Discipline</th><th data-field="mhrs">MHrs</th><th data-field="plan">Plan</th><th data-field="forecast">Forecast-3</th><th data-field="actual">Actual</th><th data-field="wk_actual">สัปดาห์นี้</th><th data-field="var_forecast">vs F-3</th></tr></thead>
+          <tbody data-draw="pgtable"></tbody>
+        </table>
+      </div>
+      <p class="sm-note">ตารางนี้แสดงทุก Priority ไม่ขึ้นกับตัวกรอง · ตัวหนา = ระดับ Priority</p>
+    </div>
+    <div class="sm-card" id="pg-mp">
+      <h2>Manpower ราย Discipline: Actual เทียบ Forecast-3 และ Plan</h2>
+      <div class="sm-legend"><span><i class="sw line" data-c="0"></i>Actual</span><span><i class="sw line" data-c="1"></i>Forecast-3</span><span><i class="sw dashl"></i>Plan</span></div>
+      <div class="sm-mult" data-draw="mpmult" data-source="manpower"></div>
+      <p class="sm-note">หัวกราฟแต่ละอันบอก Weighted progress ของ discipline นั้นจาก CMS (ระดับรวมโครงการ)</p>
+    </div>
+    <div class="sm-grid2">
+      <div class="sm-card" id="pg-area-mp">
+        <h2>Manpower ของ Priority ที่เลือก</h2>
+        <div class="sm-legend"><span><i class="sw line" data-c="0"></i>Actual</span><span><i class="sw line" data-c="1"></i>Forecast-3</span><span><i class="sw dashl"></i>Plan</span></div>
+        <div class="sm-chart" data-draw="mparea" data-source="manpower"></div>
+        <p class="sm-note">Manpower แยกได้ระดับ E04 / E07 / E08 · รวมทุก Priority = Direct manpower ทั้งโครงการ</p>
+      </div>
+      <div class="sm-card" id="pg-prod">
+        <h2>ผลงานงานท่อต่อ Piping manpower 100 คน (รายสัปดาห์)</h2>
+        <div class="sm-legend"><span><i class="sw line" data-c="0"></i>DB เชื่อม / 100 คน</span><span><i class="sw line" data-c="2"></i>ITR 118A+119A+120A / 100 คน</span></div>
+        <div class="sm-chart" data-draw="pgprod" data-source="pipe_productivity"></div>
+        <p class="sm-note">ภาพรวมทั้งโครงการ ไม่ขึ้นกับตัวกรอง · DB จากบันทึกการเชื่อมราย joint (Weld Log) · ITR จาก Pkg Commodity · หารด้วย Actual manpower Piping</p>
+      </div>
+    </div>
+    <div class="sm-card" id="pg-mcqp">
+      <h2>MCQP: Pipe Test &amp; Reinstatement ส่ง/อนุมัติแล้ว</h2>
+      <div class="sm-legend"><span><i class="sw" data-c="0"></i>QC Wood อนุมัติ</span><span><i class="sw" data-c="1"></i>GCME ส่งแล้ว รออนุมัติ</span><span><i class="sw"></i>ยังไม่ส่ง</span></div>
+      <div class="sm-chart short" data-draw="pgmcqp" data-source="cms_mcqp"></div>
+      <p class="sm-note">จากชีท Productivity Rate ใน CMS · Steel Structure และ MEP Work ยังไม่มีการส่ง MCQP</p>
+    </div>
+  </section>
+
+  <!-- ===================== 8 CMS (BILL & PRICE) ===================== -->
+  
+
+  <!-- ===================== 9 WELD LOG ===================== -->
+  <section id="weldlog" class="sm-sec" role="tabpanel" hidden>
+    <p class="sm-note sm-ks"><b>Weld Log (RMC)</b> · จากไฟล์ 20261113_Status_DB_CFP_SME_5 ชีท Progress 13-Nov-26 (บันทึกการเชื่อมราย joint ของ GCME/RMC, 20,296 joints, ถึง 13 พ.ย. 2026) · รวมงาน Modify/Thread จึงสูงกว่าตัวเลข Pkg Commodity · Priority อ้างจากรายการ Piping Package</p>
+    <div class="sm-kpis">
+      <div class="sm-kpi"><span class="sm-kl">DB เชื่อมสะสม</span><span class="sm-kv" data-draw="wkpi" data-k="db">—</span><span class="sm-ks"><span data-draw="wkpi" data-k="joints">—</span> joints · <span data-draw="wkpi" data-k="pkgs">—</span> packages</span></div>
+      <div class="sm-kpi"><span class="sm-kl">DB สัปดาห์ล่าสุด (สิ้นสุด 13 พ.ย.)</span><span class="sm-kv" data-draw="wkpi" data-k="last_db">—</span><span class="sm-ks">เฉลี่ย 4 สัปดาห์ <span data-draw="wkpi" data-k="avg4">—</span> DB/wk</span></div>
+      <div class="sm-kpi"><span class="sm-kl">RT/PAUT coverage</span><span class="sm-kv" data-draw="wkpi" data-k="rt_pct">—</span><span class="sm-ks"><span data-draw="wkpi" data-k="rt">—</span> joints มี RT/PAUT</span></div>
+      <div class="sm-kpi"><span class="sm-kl">เชื่อมแล้ว รอ 118A</span><span class="sm-kv" data-draw="wkpi" data-k="ready118">—</span><span class="sm-ks">packages · <span data-draw="wkpi" data-k="ready118_db">—</span> DB</span></div>
+      <div class="sm-kpi"><span class="sm-kl">เชื่อมแล้ว ยังไม่ปิด 120A</span><span class="sm-kv" data-draw="wkpi" data-k="open120">—</span><span class="sm-ks">packages</span></div>
+    </div>
+    <div class="sm-card" id="wl-weekly">
+      <h2>DB เชื่อมรายสัปดาห์ (แท่ง) และสะสม (เส้น)</h2>
+      <div class="sm-legend"><span><i class="sw" data-c="0"></i>E04</span><span><i class="sw" data-c="1"></i>E07</span><span><i class="sw" data-c="2"></i>E08</span><span><i class="sw line" data-c="3"></i>สะสม (แกนขวา)</span></div>
+      <div class="sm-chart tall" data-draw="wlweekly" data-source="weld_weekly"></div>
+    </div>
+    <div class="sm-grid2">
+      <div class="sm-card" id="wl-pipe">
+        <h2>Package ที่เชื่อมแล้ว อยู่ขั้นไหนของ Test</h2>
+        <div class="sm-chart short" data-draw="wlpipe" data-source="weld_pipe"></div>
+        <p class="sm-note">นับ package ที่มีบันทึกการเชื่อม เทียบวันที่ ITR ในรายการ Piping Package</p>
+      </div>
+      <div class="sm-card" id="wl-mat">
+        <h2>สัดส่วน DB ตามวัสดุ</h2>
+        <div class="sm-chart" data-draw="wlmat" data-source="weld_mix"></div>
+      </div>
+    </div>
+    <div class="sm-card" id="wl-ready">
+      <h2>Package เชื่อมแล้วแต่ยังไม่ได้ 118A (เรียงตาม DB)</h2>
+      <div class="sm-tw">
+        <table class="sm-t" data-source="weld_pipe" data-row-key="key,package">
+          <thead><tr><th>Package</th><th>Priority</th><th data-field="db">DB</th><th data-field="joints">Joints</th><th data-field="last_date">เชื่อมล่าสุด</th><th data-field="idle_days">ว่างมา (วัน)</th><th class="l" data-field="status">สถานะ (Summary)</th></tr></thead>
+          <tbody data-draw="wlready"></tbody>
+        </table>
+      </div>
+      <p class="sm-note">“ว่างมา” = จำนวนวันจากวันเชื่อมล่าสุดถึง 13 พ.ย. 2026 · แสดง 30 รายการแรก</p>
+    </div>
+    <div class="sm-grid2">
+      <div class="sm-card" id="wl-rt">
+        <h2>RT/PAUT coverage ตามวัสดุ</h2>
+        <div class="sm-tw">
+          <table class="sm-t" data-source="weld_rt" data-row-key="key,material">
+            <thead><tr><th>วัสดุ</th><th data-field="joints">Joints</th><th data-field="rt">RT/PAUT</th><th data-field="rt_pct">% coverage</th><th data-field="db">DB</th></tr></thead>
+            <tbody data-draw="wlrt"></tbody>
+          </table>
+        </div>
+        <p class="sm-note">ข้อต่อเกลียว/Galv ปกติไม่ต้อง RT · เทียบกับ % RT ที่สเปกโครงการกำหนด</p>
+      </div>
+      <div class="sm-card" id="wl-size">
+        <h2>ขนาด Joint: จำนวน joint เทียบ DB</h2>
+        <div class="sm-legend"><span><i class="sw" data-c="0"></i>% ของจำนวน joint</span><span><i class="sw" data-c="1"></i>% ของ DB</span></div>
+        <div class="sm-chart short" data-draw="wlsize" data-source="weld_mix"></div>
+        <p class="sm-note">joint เล็ก (≤1") มีจำนวนมากแต่ได้ DB น้อย ทำให้ DB ต่อแรงงานดูต่ำ</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 10 CLIENT DB (AMOGH) ===================== -->
+  
+
+  <!-- ===================== 11 COMPLETION FORECAST ===================== -->
+  <section id="compl" class="sm-sec" role="tabpanel" hidden>
+    <p class="sm-note sm-ks">จากไฟล์ 261113_SMP5_Overall_ITR_Status_a ชีท Data (1,960 รายการ: test package งานท่อ, tag mechanical, structural, painting, HSE) · สถานะ “Complete” = ITR ครบทุกใบของรายการนั้น · Forecast = คอลัมน์ Forecast Adjust · Target = MCWD Target</p>
+    <div class="sm-kpis">
+      <div class="sm-kpi"><span class="sm-kl">รายการทั้งหมด</span><span class="sm-kv" data-draw="cpkpi" data-k="total">—</span><span class="sm-ks">Complete <span data-draw="cpkpi" data-k="pct">—</span></span></div>
+      <div class="sm-kpi"><span class="sm-kl">ยังไม่ Complete</span><span class="sm-kv" data-draw="cpkpi" data-k="open">—</span><span class="sm-ks">รายการ</span></div>
+      <div class="sm-kpi"><span class="sm-kl">ปิดได้สัปดาห์ล่าสุด</span><span class="sm-kv" data-draw="cpkpi" data-k="last_wk">—</span><span class="sm-ks">เฉลี่ย 4 สัปดาห์ <span data-draw="cpkpi" data-k="avg4">—</span>/wk</span></div>
+      <div class="sm-kpi"><span class="sm-kl">Forecast ปิดภายใน ธ.ค. 2026</span><span class="sm-kv" data-draw="cpkpi" data-k="fc_dec">—</span><span class="sm-ks">ที่เหลือเลยไปปี 2027 <span data-draw="cpkpi" data-k="fc_2027">—</span></span></div>
+      <div class="sm-kpi"><span class="sm-kl">เลย MCWD Target แล้ว</span><span class="sm-kv" data-draw="cpkpi" data-k="late">—</span><span class="sm-ks">รายการที่ยังไม่ Complete</span></div>
+    </div>
+
+    <div class="sm-card" id="cp-curve">
+      <h2>ปิดรายการสะสม: Actual และ Forecast (แท่ง = รายสัปดาห์)</h2>
+      <div class="sm-legend"><span><i class="sw line" data-c="0"></i>Actual สะสม</span><span><i class="sw dashl"></i>Forecast สะสม</span><span><i class="sw" data-c="0"></i>Actual รายสัปดาห์</span><span><i class="sw" data-c="1"></i>Forecast รายสัปดาห์</span></div>
+      <div class="sm-chart tall" data-draw="cpcurve" data-source="cp_tags"></div>
+      <p class="sm-note">Actual ตาม Complete date · Forecast ตาม Forecast Adjust ของรายการที่ยังไม่ Complete (ไม่รวม <span data-draw="cpkpi" data-k="no_fc">—</span> รายการที่ไม่มี forecast)</p>
+    </div>
+
+    <div class="sm-grid2">
+      <div class="sm-card" id="cp-disc">
+        <h2>Complete แยก Priority × Discipline</h2>
+        <div class="sm-legend"><span><i class="sw" data-c="0"></i>Complete</span><span><i class="sw" style="background:var(--color-bad)"></i>ยังไม่ Complete</span></div>
+        <div class="sm-chart" data-draw="cpdisc" data-source="cp_tags"></div>
+      </div>
+      <div class="sm-card" id="cp-reason">
+        <h2>รายการที่ยังไม่ Complete ติดอะไร</h2>
+        <div class="sm-legend" data-draw="cpreasonlegend"></div>
+        <div class="sm-chart" data-draw="cpreason" data-source="cp_tags"></div>
+      </div>
+    </div>
+
+    <div class="sm-card" id="cp-subsys">
+      <h2>Sub-system: รายการคงเหลือ, MCWD Target และ Forecast</h2>
+      <div class="sm-tw">
+        <table class="sm-t" data-source="cp_tags">
+          <thead><tr><th>Sub-system</th><th class="l">ชื่อ</th><th>Priority</th><th>Piping</th><th>Mech</th><th>Struct.</th><th>Paint</th><th>คงเหลือ</th><th>% Complete</th><th>MCWD Target</th><th>Forecast ล่าสุด</th><th>สถานะ</th></tr></thead>
+          <tbody data-draw="cpsubsys"></tbody>
+        </table>
+      </div>
+      <p class="sm-note">ตัวเลขในคอลัมน์ discipline = รายการที่ยังไม่ Complete · Forecast ล่าสุด = วัน Forecast Adjust ที่ช้าที่สุดของรายการที่เหลือ · แสดงเฉพาะ sub-system ที่ยังมีงานค้าง เรียงตามจำนวนคงเหลือ</p>
+    </div>
+  </section>
+
+  <details class="sm-foot" id="notes">
+    <summary>ที่มาของตัวเลขและข้อจำกัด</summary>
+    <ul>
+      <li>Commodity (S-Curve, Forecast vs Actual, ผู้รับเหมา): ชีท “(1) Pkg Commodity” — Plan FC-4 และ Actual รายสัปดาห์; E04 คือผลรวมของ E04-01/02/03</li>
+      <li>Test package: ชีท “SUM” สำหรับยอดสรุป และชีท “(1) Piping Package” สำหรับสถานะติดขัดและจำนวนรายสัปดาห์</li>
+      <li>ITR / MC Readiness: ชีท “GREEN TABLE” (ข้อมูลใหม่กว่า Turnover Data)</li>
+      <li>Joint / QC: ชีท “(1) Input DB” คอลัมน์ชุดสุดท้าย (WELDING DATE, DB Weld, RT/PAUT)</li>
+      <li>Mechanical: ไฟล์ “261113_SMP5_Mechanical_Package_Status” — Step จากชีท D1-Data Input, Activity จากชีท Sum, ITR ที่ต้องทำ/เสร็จและวันที่จากชีท D1-ITR Matrix</li>
+      <li>Weighted progress: ไฟล์ “261113_SMP5-CMS_a_Priced” (cut-off 13 พ.ย. 2026) — ชีท Part B WBS Progress (ตารางแรก, Current Qty), S-Curve จากชีท SCurve RFC-3, MCQP จากชีท Productivity Rate</li>
+      <li>Weld Log (RMC): ไฟล์ “20261113_Status_DB_CFP_SME_5” ชีท Progress 13-Nov-26 (ราย joint) รวมเป็นรายสัปดาห์/ราย package/ตามวัสดุ</li>
+      <li>Completion Forecast: ไฟล์ “261113_SMP5_Overall_ITR_Status_a” ชีท Data (สถานะราย tag/package, Complete date, Forecast Adjust, MCWD Target)</li>
+      <li>Manpower: ไฟล์ “261106_Manpower_Loading” — ชีท MP Histrogram by Discipline และ E-04/E-07/E-08 On-site (Direct manpower)</li>
+      <li>ช่อง #REF! ในไฟล์ต้นฉบับ (เช่น MCQC ในชีท SUM และ Plan ในชีท PI Commodity) ไม่ได้นำมาใช้</li>
+    </ul>
+  </details>
+</div>
+</div>
+<div class="site-foot">สร้างไฟล์เมื่อ 18 Nov 2026 09:00 (เวลาไทย) · ข้อมูลเป็นสำเนา ณ วันที่ระบุในแต่ละแท็บ</div>
+<script>
+(function () {
+  var FILES = {"summary": "data/commodity_summary.csv", "weekly": "data/commodity_weekly.csv", "subcon": "data/subcon_weekly.csv", "pkgsum": "data/testpkg_summary.csv", "pkglist": "data/testpkg_list.csv", "itr": "data/itr_status.csv", "itrw": "data/itr_weekly.csv", "joints": "data/joints_summary.csv", "mech_steps": "data/mech_steps.csv", "mech_activity": "data/mech_activity.csv", "mech_itr": "data/mech_itr.csv", "mech_weekly": "data/mech_weekly.csv", "cms_progress": "data/cms_progress.csv", "cms_scurve": "data/cms_scurve.csv", "cms_mcqp": "data/cms_mcqp.csv", "manpower": "data/manpower_weekly.csv", "weld_weekly": "data/weld_weekly.csv", "weld_pkg": "data/weld_pkg.csv", "weld_mix": "data/weld_mix.csv", "cp_tags": "data/cp_tags.csv"};
+  var parsed = {}, calcs = {}, draws = {}, onDatas = [], params = {}, ready = false, queued = false;
+  var colors = ['#2f6fde', '#e07b39', '#2fa36b', '#8e5bd0', '#c9a227', '#1a9bb0', '#d9577a', '#7a8794'];
+  function status(id) { return ready ? (parsed[id] || calcs[id] ? 'ok' : 'missing') : 'loading'; }
+  window.dash = {
+    colors: colors,
+    data: function (id) {
+      var st = status(id);
+      if (st !== 'ok') return { status: st, data: st === 'loading' ? [] : [] };
+      if (parsed[id]) return { status: 'ok', data: parsed[id] };
+      var c = calcs[id];
+      if (!('value' in c)) {
+        var ins = c.inputs.map(function (i) { return window.dash.data(i).data; });
+        try { c.value = c.fn.apply(null, ins); } catch (e) { console.error('calc ' + id, e); c.value = []; }
+      }
+      return { status: 'ok', data: c.value };
+    },
+    calc: function (id, o) { calcs[id] = o; },
+    loader: function () {},
+    draw: function (n, fn) { draws[n] = fn; },
+    onData: function (fn) { onDatas.push(fn); },
+    params: function () { return params; },
+    setParams: function (o) { Object.assign(params, o); schedule(); },
+    resetParams: function () { params = {}; schedule(); },
+    setLink: function (id) { try { history.replaceState(null, '', '#' + id); } catch (e) {} schedule(); },
+    refresh: function () {},
+  };
+  function run() {
+    queued = false;
+    onDatas.forEach(function (f) { try { f(); } catch (e) { console.error(e); } });
+    document.querySelectorAll('[data-draw]').forEach(function (el) {
+      if (el.closest('[hidden]')) return;
+      var fn = draws[el.dataset.draw];
+      if (fn) { try { fn(el); } catch (e) { console.error(el.dataset.draw, e); } }
+    });
+  }
+  function schedule() { if (!queued) { queued = true; requestAnimationFrame(run); } }
+  window.__dashRun = schedule;
+  var t; window.addEventListener('resize', function () { clearTimeout(t); t = setTimeout(schedule, 150); });
+  window.__dashStart = function () {
+    schedule();
+    Promise.all(Object.keys(FILES).map(function (id) {
+      return fetch(FILES[id]).then(function (r) { if (!r.ok) throw new Error(FILES[id]); return r.text(); }).then(function (txt) {
+        var rows = d3.csvParse(txt);
+        rows.forEach(function (r) { for (var k in r) if (r[k] === '') r[k] = null; });
+        parsed[id] = rows;
+      }).catch(function (e) { console.error('load failed', e); });
+    })).then(function () { ready = true; schedule(); });
+  };
+})();
+</script>
+<script>
+
+/* ---------- calculations (readers can open these in Sources) ---------- */
+dash.calc('rates', {
+  title: 'อัตรารายสัปดาห์ต่อ Activity',
+  description: 'Actual สัปดาห์ล่าสุด ค่าเฉลี่ย 4 สัปดาห์ และจำนวนสัปดาห์ที่ต้องใช้กับงานที่เหลือ',
+  inputs: ['weekly', 'summary'],
+  fn: (weekly, summary) => {
+    const by = new Map();
+    for (const r of weekly) {
+      if (r.actual_inc === null || r.actual_inc === '') continue;
+      const k = r.priority + '|' + r.activity;
+      if (!by.has(k)) by.set(k, []);
+      by.get(k).push(r);
+    }
+    return summary.map((s) => {
+      const rows = (by.get(s.priority + '|' + s.activity) || []).sort((a, b) => (a.week < b.week ? -1 : 1));
+      const last = rows[rows.length - 1];
+      const last4 = rows.slice(-4).map((r) => +r.actual_inc);
+      const avg4 = last4.length ? last4.reduce((a, b) => a + b, 0) / last4.length : null;
+      const remain = +s.remain;
+      return {
+        priority: s.priority, activity: s.activity,
+        last_week: last ? last.week : null,
+        last_inc: last ? +last.actual_inc : null,
+        avg4,
+        weeks_needed: remain <= 0 ? 0 : (avg4 > 0 ? remain / avg4 : null),
+      };
+    });
+  },
+});
+
+dash.calc('pkg_totals', {
+  title: 'Test package รวมตาม Priority',
+  description: 'ผลรวมชีท SUM ตาม Priority ที่เลือก (E04 = E04-01+02+03, E08 = E08-01+02)',
+  inputs: ['pkgsum'],
+  fn: (pkgsum) => {
+    const keys = ['Overall', 'E08', 'E04', 'E04-01', 'E04-02', 'E04-03', 'E07'];
+    const fields = ['total', 'lc_done_ujv', 'lc_acc', 'lc_remain', 'lc_week', 'ht_done_ujv', 'ht_acc', 'ht_remain', 'ht_week', 'ht_backlog', 'ri_done_ujv', 'ri_acc', 'ri_remain', 'ri_week', 'ri_backlog'];
+    return keys.map((key) => {
+      const rows = pkgsum.filter((r) => (key === 'Overall' ? r.wbs === 'รวม' : r.wbs !== 'รวม' && String(r.wbs).startsWith(key)));
+      const o = { key };
+      for (const f of fields) o[f] = rows.reduce((s, r) => s + (+r[f] || 0), 0);
+      for (const st of ['lc', 'ht', 'ri']) {
+        o[st + '_done'] = o[st + '_done_ujv'] + o[st + '_acc'];
+        o[st + '_pct'] = o.total ? o[st + '_done'] / o.total : null;
+      }
+      o.week_total = o.lc_week + o.ht_week + o.ri_week;
+      return o;
+    });
+  },
+});
+
+dash.calc('constraints', {
+  title: 'Package ที่ยังไม่ Reinstate แยกตามสถานะและ Priority',
+  description: 'นับ package ที่ยังไม่มีวันที่ ITR 120A (ไม่รวมที่ Cancelled) ตามคอลัมน์ Summary แยก Priority (E08-01A รวมใน E08-01, E08-02A รวมใน E08-02)',
+  inputs: ['pkglist'],
+  fn: (pkglist) => {
+    const keys = ['Overall', 'E08', 'E04', 'E04-01', 'E04-02', 'E04-03', 'E07'];
+    const out = [];
+    for (const key of keys) {
+      const counts = new Map();
+      for (const p of pkglist) {
+        const pr = p.priority || '';
+        if (key !== 'Overall' && !pr.startsWith(key)) continue;
+        if (p.ri_date) continue;
+        if (p.ri_note === 'Cancelled') continue;
+        const st = p.status && p.status !== '01) Completed' ? p.status : (p.status === '01) Completed' ? '01) Completed (ยังไม่มีวันที่ 120A)' : '(ไม่ระบุสถานะ)');
+        const pg = /^E0\d-\d\d/.test(pr) ? pr.slice(0, 6) : (/^E0\d$/.test(pr) ? pr : '(ไม่ระบุ Priority)');
+        const id = st + '|' + pg;
+        counts.set(id, (counts.get(id) || 0) + 1);
+      }
+      for (const [id, n] of counts) { const [status, priority] = id.split('|'); out.push({ key, status, priority, n }); }
+    }
+    return out;
+  },
+});
+
+dash.calc('pkg_weekly', {
+  title: 'ITR 118A/119A/120A ที่ปิดได้รายสัปดาห์',
+  description: 'นับวันที่ ITR ในรายการ Piping Package รวมเป็นสัปดาห์สิ้นสุดวันศุกร์',
+  inputs: ['pkglist'],
+  fn: (pkglist) => {
+    const keys = ['Overall', 'E08', 'E04', 'E04-01', 'E04-02', 'E04-03', 'E07'];
+    const friday = (s) => {
+      const d = new Date(s + 'T00:00:00Z');
+      d.setUTCDate(d.getUTCDate() + ((5 - d.getUTCDay() + 7) % 7));
+      return d.toISOString().slice(0, 10);
+    };
+    const m = new Map();
+    for (const p of pkglist) {
+      const pr = p.priority || '';
+      for (const key of keys) {
+        if (key !== 'Overall' && !pr.startsWith(key)) continue;
+        for (const [st, col] of [['lc', 'lc_date'], ['ht', 'ht_date'], ['ri', 'ri_date']]) {
+          if (!p[col]) continue;
+          const wk = friday(p[col]);
+          const id = key + '|' + wk;
+          if (!m.has(id)) m.set(id, { key, week: wk, lc: 0, ht: 0, ri: 0 });
+          m.get(id)[st] += 1;
+        }
+      }
+    }
+    return [...m.values()].sort((a, b) => (a.week < b.week ? -1 : 1));
+  },
+});
+
+dash.calc('itr_totals', {
+  title: 'ITR check sheet รวมตาม WBS',
+  description: 'ผลรวมจาก GREEN TABLE แยก A/B check sheet',
+  inputs: ['itr'],
+  fn: (itr) => ['Overall', 'E04', 'E07', 'E08'].map((key) => {
+    const rows = itr.filter((r) => key === 'Overall' || r.wbs === key);
+    const s = (f, t) => rows.filter((r) => !t || r.sheet_type === t).reduce((a, r) => a + (+r[f] || 0), 0);
+    const total = s('total'), completed = s('completed');
+    const a_total = s('total', 'A'), a_done = s('completed', 'A'), b_total = s('total', 'B'), b_done = s('completed', 'B');
+    return { key, total, completed, remaining: total - completed, pct: total ? completed / total : null,
+      a_total, a_done, a_pct: a_total ? a_done / a_total : null, b_total, b_done, b_pct: b_total ? b_done / b_total : null };
+  }),
+});
+
+dash.calc('subcon_totals', {
+  title: 'DB ตามผู้รับเหมา',
+  description: 'รวม DB รายสัปดาห์ของแต่ละผู้รับเหมาใน Priority เดียวกัน',
+  inputs: ['subcon'],
+  fn: (subcon) => {
+    const m = new Map();
+    const weeks = [...new Set(subcon.map((r) => r.week))].sort();
+    const last4 = new Set(weeks.slice(-4));
+    for (const r of subcon) {
+      const id = r.priority + '|' + r.subcon;
+      if (!m.has(id)) m.set(id, { priority: r.priority, subcon: r.subcon, db: 0, last4: 0, best: 0, weeks: 0 });
+      const o = m.get(id);
+      const v = +r.db || 0;
+      o.db += v; o.weeks += 1; if (v > o.best) o.best = v;
+      if (last4.has(r.week)) o.last4 += v;
+    }
+    return [...m.values()];
+  },
+});
+
+dash.calc('joint_mat', {
+  title: 'Joint และ RT/PAUT ตามวัสดุ',
+  description: 'รวมจาก Input DB ตาม Priority และวัสดุ',
+  inputs: ['joints'],
+  fn: (joints) => {
+    const keys = ['Overall', 'E08', 'E04', 'E04-01', 'E04-02', 'E04-03', 'E07'];
+    const out = [];
+    for (const key of keys) {
+      const m = new Map();
+      for (const r of joints) {
+        const pr = r.priority || '';
+        if (key !== 'Overall' && !pr.startsWith(key)) continue;
+        if (!m.has(r.material)) m.set(r.material, { key, material: r.material, joints: 0, welded: 0, db: 0, rt: 0 });
+        const o = m.get(r.material);
+        o.joints += +r.joints || 0; o.welded += +r.joints_welded || 0; o.db += +r.db_welded || 0; o.rt += +r.rt_paut || 0;
+      }
+      for (const o of m.values()) { o.rt_rate = o.welded ? (o.rt / o.welded) * 100 : null; out.push(o); }
+    }
+    return out;
+  },
+});
+
+</script>
+<script>
+
+/* ---------- shared helpers ---------- */
+window.SM = (() => {
+  const f0 = d3.format(',.0f'), f1 = d3.format(',.1f'), fp = d3.format('.0%');
+  const num = (v) => (v === null || v === undefined || v === '' ? null : +v);
+  const fmt = (v) => (v === null || v === undefined || isNaN(v) ? '—' : Math.abs(v - Math.round(v)) > 0.001 ? f1(v) : f0(v));
+  const parse = d3.utcParse('%Y-%m-%d');
+  const fdate = d3.utcFormat('%-d %b %Y');
+  const fdShort = d3.utcFormat('%-d %b');
+  const prio = () => dash.params().prio || 'Overall';
+  const act = () => dash.params().act || 'Piping Welding';
+  const wbsKey = () => (prio() === 'Overall' ? 'Overall' : prio().slice(0, 3));
+  const enc = (s) => String(s).replace(/%/g, '%25').replace(/&/g, '%26').replace(/=/g, '%3D').replace(/,/g, '%2C');
+  const where = (o) => Object.entries(o).map(([k, v]) => enc(k) + '=' + enc(v)).join('&');
+  const DATA_DATE = '2026-11-13';
+  const color = (i) => dash.colors[i % dash.colors.length];
+
+  function state(ids) {
+    let s = 'ok';
+    for (const id of ids) {
+      const st = dash.data(id).status;
+      if (st === 'error' || st === 'missing') return 'error';
+      if (st !== 'ok') s = 'loading';
+    }
+    return s;
+  }
+  function placeholder(el, st) {
+    const d = document.createElement('div');
+    if (st === 'error') { d.className = 'sm-fail'; d.textContent = 'Failed to load'; }
+    else d.className = 'dash-skeleton sm-skel';
+    el.replaceChildren(d);
+  }
+  function empty(el, msg) {
+    const d = document.createElement('div');
+    d.className = 'sm-fail';
+    d.textContent = msg;
+    el.replaceChildren(d);
+  }
+  function tooltip(el) {
+    const t = document.createElement('div');
+    t.className = 'sm-tip';
+    t.style.display = 'none';
+    el.append(t);
+    return {
+      show(head, lines, x, y) {
+        t.replaceChildren();
+        const h = document.createElement('div'); h.className = 'h'; h.textContent = head; t.append(h);
+        for (const l of lines) { const d = document.createElement('div'); d.textContent = l; t.append(d); }
+        t.style.display = 'block';
+        const W = el.clientWidth, tw = t.offsetWidth, th = t.offsetHeight;
+        let left = x + 12; if (left + tw > W) left = Math.max(0, x - tw - 12);
+        let top = y - th - 8; if (top < 0) top = y + 12;
+        t.style.left = left + 'px'; t.style.top = top + 'px';
+      },
+      hide() { t.style.display = 'none'; },
+    };
+  }
+  function textWidth(svg, strs) {
+    const t = svg.append('text').attr('x', -9999).attr('y', -9999);
+    let w = 0;
+    for (const s of strs) { t.text(s); w = Math.max(w, t.node().getComputedTextLength() || s.length * 7); }
+    t.remove();
+    return w;
+  }
+  function makeSvg(el, h, label) {
+    el.replaceChildren();
+    const W = Math.max(260, el.clientWidth || 600);
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('height', h).attr('viewBox', `0 0 ${W} ${h}`)
+      .attr('role', 'img').attr('aria-label', label).style('display', 'block').style('overflow', 'visible');
+    return { svg, W };
+  }
+
+  /* lines over time: series = [{label, color, dashed, pts:[{d, v}]}], ref = {v, label} */
+  function lines(el, { series, ref, h = 260, label, yfmt = fmt }) {
+    const { svg, W } = makeSvg(el, h, label);
+    const all = series.flatMap((s) => s.pts);
+    if (!all.length) return empty(el, 'ไม่มีข้อมูลสำหรับตัวเลือกนี้');
+    const ymax = Math.max(d3.max(all, (p) => p.v) || 0, ref ? ref.v : 0) * 1.05 || 1;
+    const y = d3.scaleLinear().domain([0, ymax]).nice();
+    const ticks = y.ticks(5);
+    const ml = textWidth(svg, ticks.map(yfmt)) + 10;
+    const m = { t: 10, r: 14, b: 24, l: ml };
+    const x = d3.scaleUtc().domain(d3.extent(all, (p) => p.d)).range([m.l, W - m.r]);
+    y.range([h - m.b, m.t]);
+    svg.append('g').attr('class', 'grid').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).tickValues(ticks).tickSize(-(W - m.l - m.r)).tickFormat(''));
+    svg.append('g').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).tickValues(ticks).tickFormat(yfmt).tickSize(0).tickPadding(6)).select('.domain').remove();
+    const xt = Math.max(2, Math.floor((W - m.l - m.r) / 80));
+    svg.append('g').attr('transform', `translate(0,${h - m.b})`).call(d3.axisBottom(x).ticks(xt).tickFormat(d3.utcFormat('%b %y')).tickSizeOuter(0));
+    if (ref) {
+      svg.append('line').attr('x1', m.l).attr('x2', W - m.r).attr('y1', y(ref.v)).attr('y2', y(ref.v))
+        .style('stroke', 'var(--cds-chart-reference)').attr('stroke-dasharray', '2 3');
+    }
+    const ln = d3.line().x((p) => x(p.d)).y((p) => y(p.v));
+    for (const s of series) {
+      svg.append('path').attr('d', ln(s.pts)).attr('fill', 'none').style('stroke', s.color).attr('stroke-width', s.dashed ? 1.5 : 2.25)
+        .attr('stroke-dasharray', s.dashed ? '5 4' : null);
+    }
+    const guide = svg.append('line').attr('y1', m.t).attr('y2', h - m.b).style('stroke', 'var(--cds-chart-axis)').style('display', 'none');
+    const tip = tooltip(el);
+    const dates = [...new Set(all.map((p) => +p.d))].sort((a, b) => a - b);
+    svg.append('rect').attr('x', m.l).attr('y', m.t).attr('width', W - m.l - m.r).attr('height', h - m.t - m.b).attr('fill', 'transparent')
+      .on('pointermove', (ev) => {
+        const [px, py] = d3.pointer(ev);
+        const t = +x.invert(px);
+        const dd = dates.reduce((a, b) => (Math.abs(b - t) < Math.abs(a - t) ? b : a), dates[0]);
+        guide.attr('x1', x(dd)).attr('x2', x(dd)).style('display', null);
+        const linesTxt = series.map((s) => { const p = s.pts.find((q) => +q.d === dd); return p ? `${s.label}: ${yfmt(p.v)}` : null; }).filter(Boolean);
+        if (ref) linesTxt.push(`${ref.label}: ${yfmt(ref.v)}`);
+        const sr = svg.node().getBoundingClientRect();
+        tip.show('สัปดาห์สิ้นสุด ' + fdate(new Date(dd)), linesTxt, (px / W) * sr.width, (py / h) * sr.height);
+      })
+      .on('pointerleave', () => { guide.style('display', 'none'); tip.hide(); });
+  }
+
+  /* vertical bars per week: groups = [{label, color, vals: Map(week->v)}] drawn side by side */
+  function weekBars(el, { weeks, groups, h = 220, label, overlay = false }) {
+    const { svg, W } = makeSvg(el, h, label);
+    if (!weeks.length) return empty(el, 'ไม่มีข้อมูลสำหรับตัวเลือกนี้');
+    const ymax = d3.max(groups.flatMap((g) => weeks.map((w) => g.vals.get(w) || 0))) || 1;
+    const y = d3.scaleLinear().domain([0, ymax]).nice();
+    const ticks = y.ticks(4);
+    const m = { t: 10, r: 8, b: 24, l: textWidth(svg, ticks.map(fmt)) + 10 };
+    y.range([h - m.b, m.t]);
+    const x = d3.scaleBand().domain(weeks).range([m.l, W - m.r]).padding(0.2);
+    svg.append('g').attr('class', 'grid').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).tickValues(ticks).tickSize(-(W - m.l - m.r)).tickFormat(''));
+    svg.append('g').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).tickValues(ticks).tickFormat(fmt).tickSize(0).tickPadding(6)).select('.domain').remove();
+    const every = Math.max(1, Math.ceil(weeks.length / Math.max(2, Math.floor((W - m.l - m.r) / 56))));
+    svg.append('g').attr('transform', `translate(0,${h - m.b})`)
+      .call(d3.axisBottom(x).tickValues(weeks.filter((_, i) => i % every === 0)).tickFormat((w) => fdShort(parse(w))).tickSizeOuter(0));
+    const inner = d3.scaleBand().domain(groups.map((_, i) => i)).range([0, x.bandwidth()]).padding(0.1);
+    groups.forEach((g, i) => {
+      svg.append('g').selectAll('rect').data(weeks).join('rect')
+        .attr('x', (w) => (overlay ? x(w) + (i ? x.bandwidth() * 0.2 : 0) : x(w) + inner(i)))
+        .attr('width', overlay ? (i ? x.bandwidth() * 0.6 : x.bandwidth()) : inner.bandwidth())
+        .attr('y', (w) => y(Math.max(0, g.vals.get(w) || 0))).attr('height', (w) => y(0) - y(Math.max(0, g.vals.get(w) || 0)))
+        .style('fill', g.color).attr('rx', 1.5);
+    });
+    const tip = tooltip(el);
+    svg.append('g').selectAll('rect').data(weeks).join('rect').attr('x', (w) => x(w) - (x.step() * x.paddingInner()) / 2).attr('width', x.step())
+      .attr('y', m.t).attr('height', h - m.t - m.b).attr('fill', 'transparent')
+      .on('pointermove', (ev, w) => {
+        const [px, py] = d3.pointer(ev, svg.node());
+        const sr = svg.node().getBoundingClientRect();
+        tip.show('สัปดาห์สิ้นสุด ' + fdate(parse(w)), groups.map((g) => `${g.label}: ${fmt(g.vals.get(w) || 0)}`), (px / W) * sr.width, (py / h) * sr.height);
+      })
+      .on('pointerleave', () => tip.hide());
+  }
+
+  /* horizontal stacked bars: rows = [{label, parts:[{label, v, color}]}] */
+  function hbars(el, { rows, label, rowH = 30, showTotal = true }) {
+    if (!rows.length) return empty(el, 'ไม่มีข้อมูลสำหรับตัวเลือกนี้');
+    const h = rows.length * rowH + 10;
+    const { svg, W } = makeSvg(el, h, label);
+    const lw = Math.min(W * 0.45, textWidth(svg, rows.map((r) => r.label)) + 10);
+    const totals = rows.map((r) => d3.sum(r.parts, (p) => p.v));
+    const vw = textWidth(svg, rows.map((r, i) => r.totalText || fmt(totals[i]))) + 8;
+    const x = d3.scaleLinear().domain([0, d3.max(totals) || 1]).range([lw, W - vw]);
+    const tip = tooltip(el);
+    rows.forEach((r, i) => {
+      const g = svg.append('g').attr('transform', `translate(0,${i * rowH + 4})`);
+      g.append('text').attr('x', lw - 8).attr('y', rowH / 2).attr('dy', '0.32em').attr('text-anchor', 'end').text(r.label);
+      let acc = 0;
+      r.parts.forEach((p) => {
+        g.append('rect').attr('x', x(acc)).attr('y', 4).attr('height', rowH - 10).attr('width', Math.max(0, x(acc + p.v) - x(acc))).style('fill', p.color);
+        acc += p.v;
+      });
+      if (showTotal) g.append('text').attr('x', x(acc) + 6).attr('y', rowH / 2).attr('dy', '0.32em').text(r.totalText || fmt(acc));
+      g.append('rect').attr('x', 0).attr('y', 0).attr('width', W).attr('height', rowH).attr('fill', 'transparent')
+        .on('pointermove', (ev) => {
+          const [px, py] = d3.pointer(ev, svg.node());
+          const sr = svg.node().getBoundingClientRect();
+          tip.show(r.label, r.parts.map((p) => `${p.label}: ${fmt(p.v)}`), (px / W) * sr.width, (py / h) * sr.height);
+        })
+        .on('pointerleave', () => tip.hide());
+    });
+  }
+
+  return { num, fmt, fp, f1, parse, fdate, prio, act, wbsKey, enc, where, DATA_DATE, color, state, placeholder, empty, tooltip, lines, weekBars, hbars };
+})();
+
+</script>
+<script>
+
+/* ---------- tabs, filters, legend swatches (listen + set allowed attributes only) ---------- */
+(() => {
+  const tabs = [...document.querySelectorAll('.sm-tab')];
+  const open = (id) => {
+    const target = document.getElementById(id);
+    if (!target || !target.matches('.sm-sec')) return;
+    for (const t of tabs) t.setAttribute('aria-selected', t.dataset.tab === id ? 'true' : 'false');
+    for (const s of document.querySelectorAll('.sm-sec')) s.hidden = s.id !== id;
+    dash.setLink(id);
+  };
+  for (const t of tabs) t.addEventListener('click', () => open(t.dataset.tab));
+  const h = (location.hash || '').slice(1);
+  if (h) open(h);
+
+  document.addEventListener('click', (ev) => {
+    const tr = ev.target.closest && ev.target.closest('.sm-t tbody tr');
+    if (!tr) return;
+    const on = !tr.classList.contains('sm-sel');
+    for (const o of tr.parentElement.querySelectorAll('tr.sm-sel')) o.classList.remove('sm-sel');
+    if (on) tr.classList.add('sm-sel');
+  });
+  for (const sel of document.querySelectorAll('#prio-select')) sel.addEventListener('change', () => dash.setParams({ prio: sel.value }));
+  for (const sel of document.querySelectorAll('#act-select')) sel.addEventListener('change', () => dash.setParams({ act: sel.value }));
+
+  dash.onData(() => {
+    for (const sel of document.querySelectorAll('#prio-select')) if (document.activeElement !== sel) sel.value = SM.prio();
+    for (const sel of document.querySelectorAll('#act-select')) if (document.activeElement !== sel) sel.value = SM.act();
+    for (const sw of document.querySelectorAll('.sw[data-c]')) sw.style.background = SM.color(+sw.dataset.c);
+    for (const sw of document.querySelectorAll('.sw[data-ref]')) sw.style.borderTopColor = 'var(--cds-chart-reference)';
+  });
+})();
+
+</script>
+<script>
+
+/* ---------- KPI values ---------- */
+dash.draw('kpi', (el) => {
+  const [kind, a, b] = (el.dataset.k || '').split('|');
+  let src, row, field, key;
+  const prio = SM.prio();
+  if (kind === 'c' || kind === 'r') {
+    src = kind === 'c' ? 'summary' : 'rates';
+    const act = a === '@' ? SM.act() : a;
+    field = b;
+    key = { priority: prio, activity: act };
+  } else if (kind === 'p') {
+    src = 'pkg_totals'; field = a; key = { key: prio };
+  } else if (kind === 'i') {
+    src = 'itr_totals'; field = a; key = { key: SM.wbsKey() };
+  } else return;
+  const d = dash.data(src);
+  if (d.status !== 'ok') { el.replaceChildren(d.status === 'loading' ? '—' : '—'); return; }
+  row = (d.data || []).find((r) => Object.entries(key).every(([k, v]) => r[k] === v));
+  const span = document.createElement('span');
+  span.setAttribute('data-source', src);
+  span.setAttribute('data-field', field);
+  span.setAttribute('data-where', SM.where(key));
+  let v = row ? row[field] : null;
+  let text;
+  if (v === null || v === undefined || v === '') text = '—';
+  else if (/pct$/.test(field)) text = SM.fp(+v);
+  else if (/date$/.test(field) || field === 'last_week') text = SM.fdate(SM.parse(v));
+  else if (field === 'uom') text = v;
+  else if (field === 'avg4' || field === 'weeks_needed') text = SM.f1(+v);
+  else text = SM.fmt(+v);
+  span.textContent = text;
+  el.replaceChildren(span);
+});
+
+</script>
+<script>
+
+/* ---------- S-curve (cumulative) and weekly bars ---------- */
+window.scSeries = function (act) {
+  const prio = SM.prio();
+  const rows = dash.data('weekly').data.filter((r) => r.priority === prio && r.activity === act);
+  const sum = dash.data('summary').data.find((r) => r.priority === prio && r.activity === act);
+  let first = rows.findIndex((r) => +r.plan_inc > 0 || +r.actual_inc > 0);
+  let last = -1;
+  rows.forEach((r, i) => { if (+r.plan_inc > 0 || (r.actual_inc !== null && r.actual_inc !== '')) last = i; });
+  if (first < 0) return { rows: [], sum };
+  first = Math.max(0, first - 1);
+  return { rows: rows.slice(first, Math.min(rows.length, last + 3)), sum };
+};
+
+dash.draw('scurve', (el) => {
+  const st = SM.state(['weekly', 'summary']);
+  if (st !== 'ok') return SM.placeholder(el, st);
+  const act = el.dataset.act === '@' ? SM.act() : el.dataset.act;
+  const { rows, sum } = scSeries(act);
+  if (!rows.length) return SM.empty(el, 'ไม่มี ' + act + ' สำหรับ Priority นี้');
+  SM.lines(el, {
+    label: `S-curve ${act}: Plan FC-4 และ Actual สะสมรายสัปดาห์`,
+    h: el.classList.contains('tall') ? 320 : 260,
+    series: [
+      { label: 'Plan FC-4 สะสม', color: 'var(--cds-chart-muted)', dashed: true, pts: rows.map((r) => ({ d: SM.parse(r.week), v: +r.plan_cum })) },
+      { label: 'Actual สะสม', color: SM.color(0), pts: rows.filter((r) => r.actual_cum !== null && r.actual_cum !== '').map((r) => ({ d: SM.parse(r.week), v: +r.actual_cum })) },
+    ],
+    ref: sum ? { v: +sum.total, label: 'Total scope' } : null,
+  });
+});
+
+dash.draw('weeklybars', (el) => {
+  const st = SM.state(['weekly', 'summary']);
+  if (st !== 'ok') return SM.placeholder(el, st);
+  const act = SM.act();
+  const { rows } = scSeries(act);
+  if (!rows.length) return SM.empty(el, 'ไม่มี ' + act + ' สำหรับ Priority นี้');
+  SM.weekBars(el, {
+    label: `${act} รายสัปดาห์: Plan FC-4 และ Actual`,
+    weeks: rows.map((r) => r.week),
+    overlay: true,
+    groups: [
+      { label: 'Plan FC-4', color: 'var(--cds-chart-muted)', vals: new Map(rows.map((r) => [r.week, +r.plan_inc || 0])) },
+      { label: 'Actual', color: SM.color(0), vals: new Map(rows.filter((r) => r.actual_inc !== null && r.actual_inc !== '').map((r) => [r.week, +r.actual_inc])) },
+    ],
+  });
+});
+
+</script>
+<script>
+
+/* ---------- test package ---------- */
+dash.draw('stages', (el) => {
+  const d = dash.data('pkg_totals');
+  if (d.status !== 'ok') return SM.placeholder(el, d.status === 'loading' ? 'loading' : 'error');
+  const o = (d.data || []).find((r) => r.key === SM.prio());
+  if (!o) return SM.empty(el, 'ไม่มีข้อมูล');
+  const mk = (lab, s) => ({
+    label: lab,
+    totalText: SM.fp(o[s + '_pct'] || 0),
+    parts: [
+      { label: 'UJV ทำแล้ว', v: o[s + '_done_ujv'], color: SM.color(1) },
+      { label: 'SMP5 สะสม', v: o[s + '_acc'], color: SM.color(0) },
+      { label: 'คงเหลือ', v: Math.max(0, o[s + '_remain']), color: 'var(--cds-chart-muted)' },
+    ],
+  });
+  SM.hbars(el, { label: 'Test package แต่ละขั้น: ทำแล้วและคงเหลือ', rows: [mk('118A Line Check', 'lc'), mk('119A Pressure Test', 'ht'), mk('120A Reinstatement', 'ri')], rowH: 38 });
+});
+
+dash.draw('pkgtable', (tb) => {
+  const d = dash.data('pkgsum');
+  const t = dash.data('pkg_totals');
+  if (d.status !== 'ok' || t.status !== 'ok') { tb.replaceChildren(); return; }
+  const cols = ['total', 'lc_acc', 'lc_week', 'lc_remain', 'ht_acc', 'ht_week', 'ht_remain', 'ri_acc', 'ri_week', 'ri_remain', 'ri_backlog'];
+  const dataRow = (r) => {
+    const tr = document.createElement('tr');
+    const c0 = document.createElement('td'); c0.textContent = r.wbs; tr.append(c0);
+    for (const c of cols) { const td = document.createElement('td'); td.textContent = SM.fmt(SM.num(r[c])); tr.append(td); }
+    return tr;
+  };
+  const sumRow = (key, label, cls) => {
+    const o = t.data.find((x) => x.key === key);
+    const tr = document.createElement('tr'); tr.className = cls;
+    const c0 = document.createElement('td'); c0.textContent = label; tr.append(c0);
+    for (const c of cols) {
+      const td = document.createElement('td');
+      const sp = document.createElement('span');
+      sp.setAttribute('data-source', 'pkg_totals'); sp.setAttribute('data-field', c); sp.setAttribute('data-where', SM.where({ key }));
+      sp.textContent = o ? SM.fmt(o[c]) : '—';
+      td.append(sp); tr.append(td);
+    }
+    return tr;
+  };
+  const rows = d.data.filter((r) => r.wbs !== 'รวม');
+  const out = [];
+  for (const g of ['E08', 'E04', 'E07']) {
+    const gr = rows.filter((r) => String(r.wbs).startsWith(g));
+    if (!gr.length) continue;
+    out.push(...gr.map(dataRow));
+    out.push(sumRow(g, 'Total ' + g, 'sub'));
+  }
+  out.push(sumRow('Overall', 'Grand Total', 'tot grand'));
+  tb.replaceChildren(...out);
+});
+
+window.CONS = {
+  order: ['E08-01', 'E08-02', 'E04-01', 'E04-02', 'E04-03', 'E07', '(ไม่ระบุ Priority)'],
+  color: (p) => (p.startsWith('(') ? 'var(--cds-chart-muted)' : SM.color(['E08-01', 'E08-02', 'E04-01', 'E04-02', 'E04-03', 'E07'].indexOf(p))),
+  rows: () => dash.data('constraints').data.filter((r) => r.key === SM.prio()),
+};
+
+dash.draw('conslegend', (el) => {
+  const d = dash.data('constraints');
+  if (d.status !== 'ok') { el.replaceChildren(); return; }
+  const have = new Set(CONS.rows().map((r) => r.priority));
+  el.replaceChildren(...CONS.order.filter((p) => have.has(p)).map((p) => {
+    const sp = document.createElement('span'); const i = document.createElement('i'); i.className = 'sw'; i.style.background = CONS.color(p);
+    sp.append(i, document.createTextNode(p)); return sp;
+  }));
+});
+
+dash.draw('constraints', (el) => {
+  const d = dash.data('constraints');
+  if (d.status !== 'ok') return SM.placeholder(el, d.status === 'loading' ? 'loading' : 'error');
+  const rows = CONS.rows();
+  const byS = d3.group(rows, (r) => r.status);
+  const list = [...byS.entries()].map(([status, v]) => ({ status, v, total: d3.sum(v, (r) => +r.n) })).sort((a, b) => b.total - a.total);
+  SM.hbars(el, {
+    label: 'จำนวน package ที่ยังไม่ Reinstate แยกตามสถานะ ซ้อนตาม Priority',
+    rows: list.map((s) => ({
+      label: s.status.length > 36 ? s.status.slice(0, 34) + '…' : s.status,
+      parts: CONS.order.map((p) => ({ label: p, v: d3.sum(s.v.filter((r) => r.priority === p), (r) => +r.n), color: CONS.color(p) })).filter((x) => x.v > 0),
+    })),
+    rowH: 26,
+  });
+});
+
+dash.draw('consthead', (th0) => {
+  const d = dash.data('constraints');
+  if (d.status !== 'ok') { th0.replaceChildren(); return; }
+  const rows = CONS.rows();
+  const pr = CONS.order.filter((p) => rows.some((r) => r.priority === p));
+  const head = document.createElement('tr');
+  for (const t of ['สถานะ', ...pr, 'รวม']) { const th = document.createElement('th'); th.textContent = t; if (t === 'สถานะ') th.className = 'l'; head.append(th); }
+  th0.replaceChildren(head);
+});
+
+dash.draw('constable', (tb) => {
+  const d = dash.data('constraints');
+  if (d.status !== 'ok') { tb.replaceChildren(); return; }
+  const rows = CONS.rows();
+  const pr = CONS.order.filter((p) => rows.some((r) => r.priority === p));
+  const byS = d3.group(rows, (r) => r.status);
+  const list = [...byS.entries()].map(([status, v]) => ({ status, v, total: d3.sum(v, (r) => +r.n) })).sort((a, b) => b.total - a.total);
+  const max = d3.max(rows, (r) => +r.n) || 1;
+  const out = [];
+  for (const s of list) {
+    const tr = document.createElement('tr');
+    const c0 = document.createElement('td'); c0.className = 'l'; c0.textContent = s.status; tr.append(c0);
+    for (const p of pr) {
+      const n = d3.sum(s.v.filter((r) => r.priority === p), (r) => +r.n);
+      const td = document.createElement('td'); td.className = 'hm'; td.textContent = n ? String(n) : '';
+      if (n) { td.style.background = `color-mix(in srgb, ${SM.color(0)} ${Math.round(10 + (n / max) * 60)}%, transparent)`; if (n / max > 0.6) td.style.color = 'var(--color-bg)'; }
+      tr.append(td);
+    }
+    const tt = document.createElement('td'); tt.textContent = String(s.total); tt.style.fontWeight = 'var(--cds-font-weight-medium)'; tr.append(tt);
+    out.push(tr);
+  }
+  const tot = document.createElement('tr'); tot.className = 'tot grand';
+  const t0 = document.createElement('td'); t0.className = 'l'; t0.textContent = 'รวม'; tot.append(t0);
+  for (const p of pr) { const td = document.createElement('td'); td.className = 'hm'; td.textContent = String(d3.sum(rows.filter((r) => r.priority === p), (r) => +r.n)); tot.append(td); }
+  const ta = document.createElement('td'); ta.textContent = String(d3.sum(rows, (r) => +r.n)); tot.append(ta); out.push(tot);
+  tb.replaceChildren(...out);
+});
+
+dash.draw('pkgweekly', (el) => {
+  const d = dash.data('pkg_weekly');
+  if (d.status !== 'ok') return SM.placeholder(el, d.status === 'loading' ? 'loading' : 'error');
+  const rows = d.data.filter((r) => r.key === SM.prio() && r.week <= SM.DATA_DATE);
+  const all = [];
+  if (rows.length) {
+    const end = SM.parse(rows[rows.length - 1].week);
+    for (let i = 11; i >= 0; i--) all.push(d3.utcFormat('%Y-%m-%d')(d3.utcDay.offset(end, -7 * i)));
+  }
+  const m = new Map(rows.map((r) => [r.week, r]));
+  const g = (k, lab, c) => ({ label: lab, color: SM.color(c), vals: new Map(all.map((w) => [w, m.get(w) ? m.get(w)[k] : 0])) });
+  SM.weekBars(el, { label: 'จำนวน ITR 118A 119A 120A ที่ปิดได้ในแต่ละสัปดาห์', weeks: all, groups: [g('lc', '118A', 0), g('ht', '119A', 1), g('ri', '120A', 2)] });
+});
+
+</script>
+<script>
+
+/* ---------- forecast vs actual ---------- */
+dash.draw('prtable', (tb) => {
+  const d = dash.data('summary');
+  if (d.status !== 'ok') { tb.replaceChildren(); return; }
+  const prio = SM.prio();
+  const rows = d.data.filter((r) => r.priority === prio);
+  tb.replaceChildren(...rows.map((r) => {
+    const tr = document.createElement('tr');
+    tr.setAttribute('data-key', SM.enc(r.priority) + ',' + SM.enc(r.activity));
+    const cell = (t, cls) => { const td = document.createElement('td'); if (cls) td.className = cls; td.textContent = t; tr.append(td); return td; };
+    cell(r.activity, 'l');
+    cell(r.uom || '');
+    cell(SM.fmt(SM.num(r.total)));
+    cell(SM.fmt(SM.num(r.actual)));
+    cell(SM.fmt(SM.num(r.remain)));
+    const p = SM.num(r.pct) || 0;
+    const td = cell(SM.fp(p));
+    const bar = document.createElement('span'); bar.className = 'sm-pbar';
+    const fill = document.createElement('i'); fill.style.width = Math.min(100, p * 100) + '%'; fill.style.background = SM.color(0);
+    bar.append(fill); td.append(bar);
+    cell(r.forecast_date ? SM.fdate(SM.parse(r.forecast_date)) : '—');
+    const stTd = document.createElement('td'); const tag = document.createElement('span');
+    const remain = SM.num(r.remain) || 0;
+    if (remain <= 0) { tag.className = 'sm-tag ok'; tag.textContent = 'เสร็จ'; }
+    else if (r.forecast_date && r.forecast_date < SM.DATA_DATE) { tag.className = 'sm-tag bad'; tag.textContent = 'เลย Forecast'; }
+    else { tag.className = 'sm-tag warn'; tag.textContent = 'กำลังทำ'; }
+    stTd.append(tag); tr.append(stTd);
+    return tr;
+  }));
+});
+
+dash.draw('multiples', (el) => {
+  const st = SM.state(['weekly', 'summary']);
+  if (st !== 'ok') return SM.placeholder(el, st);
+  const prio = SM.prio();
+  const acts = dash.data('summary').data.filter((r) => r.priority === prio).map((r) => r.activity);
+  el.replaceChildren();
+  for (const act of acts) {
+    const box = document.createElement('div');
+    const t = document.createElement('div'); t.className = 'sm-mtitle'; t.textContent = act;
+    const c = document.createElement('div'); c.className = 'sm-chart';
+    box.append(t, c); el.append(box);
+    const { rows, sum } = scSeries(act);
+    if (!rows.length) { SM.empty(c, 'ไม่มีข้อมูลรายสัปดาห์'); continue; }
+    SM.lines(c, {
+      h: 160, label: `${act}: Plan FC-4 และ Actual สะสม`,
+      series: [
+        { label: 'Plan FC-4 สะสม', color: 'var(--cds-chart-muted)', dashed: true, pts: rows.map((r) => ({ d: SM.parse(r.week), v: +r.plan_cum })) },
+        { label: 'Actual สะสม', color: SM.color(0), pts: rows.filter((r) => r.actual_cum !== null && r.actual_cum !== '').map((r) => ({ d: SM.parse(r.week), v: +r.actual_cum })) },
+      ],
+      ref: sum ? { v: +sum.total, label: 'Total' } : null,
+    });
+  }
+});
+
+dash.draw('prioheat', (el) => {
+  const d = dash.data('summary');
+  const st = SM.state(['summary', 'cms_progress']);
+  if (st !== 'ok') return SM.placeholder(el, st);
+  const cms = dash.data('cms_progress').data;
+  const cmsRow = (p) => (p === 'Overall' ? cms.find((r) => r.level === 'project') : p.length === 3 ? cms.find((r) => r.level === 'wbs' && r.key === p) : cms.find((r) => r.level === 'priority' && r.key === p));
+  const prios = ['E08', 'E04-01', 'E04-02', 'E04-03', 'E04', 'E07', 'Overall'];
+  const acts = [['Piping Welding', 'Welding'], ['Piping Line Check (ITR 118A)', '118A'], ['Hydrotest (ITR 119A)', '119A'], ['Reinstatement (ITR 120A)', '120A'], ['Mechanical (ITR A)', 'Mech A'], ['Mechanical (ITR B)', 'Mech B'], ['Steel Structure', 'Steel'], ['Painting & Insulation', 'Paint/Insul']];
+  const tbl = document.createElement('table'); tbl.className = 'sm-t';
+  const hr = document.createElement('tr');
+  const th0 = document.createElement('th'); th0.textContent = 'Priority'; hr.append(th0);
+  for (const [, s] of acts) { const th = document.createElement('th'); th.textContent = s; th.style.textAlign = 'center'; hr.append(th); }
+  const thA = document.createElement('th'); thA.textContent = 'Area % (CMS)'; thA.style.textAlign = 'center'; thA.style.borderLeft = '2px solid var(--color-fg-muted)'; hr.append(thA);
+  const thead = document.createElement('thead'); thead.append(hr); tbl.append(thead);
+  const tbody = document.createElement('tbody');
+  const sel = SM.prio();
+  for (const p of prios) {
+    const tr = document.createElement('tr');
+    if (p === 'Overall') tr.className = 'tot grand';
+    if (p === 'E04') tr.className = 'sub';
+    const c0 = document.createElement('td'); c0.textContent = p === 'Overall' ? 'Grand Total' : p === 'E04' ? 'Total E04' : p;
+    if (p === sel || (sel === 'E04' && p.startsWith('E04-'))) c0.style.fontWeight = 'var(--cds-font-weight-medium)';
+    tr.append(c0);
+    for (const [a] of acts) {
+      const td = document.createElement('td'); td.className = 'hm';
+      let r = d.data.find((x) => x.priority === p && x.activity === a);
+      if (!r && p === 'E08' && a === 'Mechanical (ITR B)') r = d.data.find((x) => x.priority === p && x.activity === 'Mechanical (ITR A/B)');
+      if (r) {
+        const v = +r.pct;
+        const span = document.createElement('span');
+        span.setAttribute('data-source', 'summary'); span.setAttribute('data-field', 'pct');
+        span.setAttribute('data-where', SM.where({ priority: r.priority, activity: r.activity }));
+        span.textContent = SM.fp(v);
+        td.append(span);
+        td.style.background = `color-mix(in srgb, ${SM.color(0)} ${Math.round(v * 70)}%, transparent)`;
+        if (v >= 0.6) td.style.color = 'var(--color-bg)';
+        td.title = '';
+      } else td.textContent = '—';
+      tr.append(td);
+    }
+    const cr = cmsRow(p);
+    const ta = document.createElement('td'); ta.className = 'hm'; ta.style.borderLeft = '2px solid var(--color-fg-muted)'; ta.style.fontWeight = 'var(--cds-font-weight-medium)';
+    if (cr) {
+      const v = +cr.actual;
+      const sp = document.createElement('span');
+      sp.setAttribute('data-source', 'cms_progress'); sp.setAttribute('data-field', 'actual'); sp.setAttribute('data-where', SM.where({ level: cr.level, key: cr.key }));
+      sp.textContent = d3.format('.1%')(v);
+      ta.append(sp);
+      ta.style.background = `color-mix(in srgb, ${SM.color(0)} ${Math.round(Math.min(1, v) * 70)}%, transparent)`;
+      if (v >= 0.6) ta.style.color = 'var(--color-bg)';
+      const f = SM.num(cr.forecast);
+      if (f !== null) ta.title = `Forecast-3 ${d3.format('.1%')(f)}`;
+    } else ta.textContent = '—';
+    tr.append(ta);
+    tbody.append(tr);
+  }
+  tbl.append(tbody);
+  el.replaceChildren(tbl);
+});
+
+</script>
+<script>
+
+/* ---------- ITR ---------- */
+const DISC_ORDER = ['Piping', 'Mechanical', 'Painting', 'Structural', 'Insulation', 'HSE'];
+dash.draw('itrdisc', (el) => {
+  const d = dash.data('itr');
+  if (d.status !== 'ok') return SM.placeholder(el, d.status === 'loading' ? 'loading' : 'error');
+  const k = SM.wbsKey();
+  const rows = d.data.filter((r) => k === 'Overall' || r.wbs === k);
+  const g = d3.rollup(rows, (v) => ({ t: d3.sum(v, (r) => +r.total), c: d3.sum(v, (r) => +r.completed) }), (r) => r.discipline);
+  const discs = [...g.keys()].sort((a, b) => DISC_ORDER.indexOf(a) - DISC_ORDER.indexOf(b));
+  SM.hbars(el, {
+    label: 'ITR check sheet ที่เสร็จและคงเหลือแยกตาม Discipline',
+    rows: discs.map((ds) => ({ label: ds, totalText: SM.fp(g.get(ds).c / g.get(ds).t) + ' · เหลือ ' + SM.fmt(g.get(ds).t - g.get(ds).c),
+      parts: [{ label: 'เสร็จ', v: g.get(ds).c, color: SM.color(0) }, { label: 'คงเหลือ', v: g.get(ds).t - g.get(ds).c, color: 'var(--cds-chart-muted)' }] })),
+    rowH: 32,
+  });
+});
+
+dash.draw('itrburn', (el) => {
+  const st = SM.state(['itrw', 'itr']);
+  if (st !== 'ok') return SM.placeholder(el, st);
+  const k = SM.wbsKey();
+  const rows = dash.data('itrw').data.filter((r) => k === 'Overall' || r.wbs === k);
+  const byW = d3.rollup(rows, (v) => d3.sum(v, (r) => +r.completed), (r) => r.week);
+  const weeks = [...byW.keys()].sort();
+  let c = 0;
+  const pts = weeks.map((w) => ({ d: SM.parse(w), v: (c += byW.get(w)) }));
+  const total = d3.sum(dash.data('itr').data.filter((r) => k === 'Overall' || r.wbs === k), (r) => +r.total);
+  SM.lines(el, { label: 'จำนวน ITR check sheet ที่เสร็จสะสมรายสัปดาห์', series: [{ label: 'เสร็จสะสม', color: SM.color(0), pts }], ref: { v: total, label: 'ทั้งหมด' } });
+});
+
+dash.draw('itrheat', (el) => {
+  const d = dash.data('itr');
+  if (d.status !== 'ok') return SM.placeholder(el, d.status === 'loading' ? 'loading' : 'error');
+  const k = SM.wbsKey();
+  const rows = d.data.filter((r) => k === 'Overall' || r.wbs === k);
+  const bySub = d3.group(rows, (r) => r.subsystem);
+  const subs = [...bySub.entries()].map(([s, v]) => ({
+    s, name: v[0].subsystem_name, wbs: v[0].wbs, rem: d3.sum(v, (r) => +r.remaining), tot: d3.sum(v, (r) => +r.total),
+    fc: d3.max(v, (r) => r.forecast_date || null), disc: d3.rollup(v, (x) => ({ t: d3.sum(x, (r) => +r.total), c: d3.sum(x, (r) => +r.completed) }), (r) => r.discipline),
+  })).filter((x) => x.rem > 0).sort((a, b) => b.rem - a.rem).slice(0, 20);
+  if (!subs.length) return SM.empty(el, 'ไม่มี sub-system ที่ค้าง ITR');
+  const discs = DISC_ORDER.filter((ds) => subs.some((s) => s.disc.has(ds)));
+  const tbl = document.createElement('table'); tbl.className = 'sm-t';
+  const hr = document.createElement('tr');
+  for (const [t, cls] of [['Sub-system', ''], ['ชื่อ', 'l'], ...discs.map((x) => [x, 'hm']), ['คงเหลือ', ''], ['Forecast', '']]) {
+    const th = document.createElement('th'); th.textContent = t; if (cls) th.className = cls; hr.append(th);
+  }
+  const thead = document.createElement('thead'); thead.append(hr); tbl.append(thead);
+  const tbody = document.createElement('tbody');
+  for (const s of subs) {
+    const tr = document.createElement('tr');
+    const a = document.createElement('td'); a.textContent = s.s; tr.append(a);
+    const b = document.createElement('td'); b.className = 'l'; b.textContent = s.name; tr.append(b);
+    for (const ds of discs) {
+      const td = document.createElement('td'); td.className = 'hm';
+      const v = s.disc.get(ds);
+      if (v) {
+        td.textContent = `${v.c}/${v.t}`;
+        const p = v.t ? v.c / v.t : 0;
+        td.style.background = `color-mix(in srgb, ${SM.color(0)} ${Math.round(p * 70)}%, transparent)`;
+        if (p >= 0.6) td.style.color = 'var(--color-bg)';
+      } else td.textContent = '';
+      tr.append(td);
+    }
+    const r = document.createElement('td'); r.textContent = SM.fmt(s.rem); tr.append(r);
+    const f = document.createElement('td');
+    if (s.fc) {
+      f.textContent = SM.fdate(SM.parse(s.fc));
+      if (s.fc < SM.DATA_DATE) f.style.color = 'var(--color-bad)';
+    } else f.textContent = '—';
+    tr.append(f);
+    tbody.append(tr);
+  }
+  tbl.append(tbody);
+  el.replaceChildren(tbl);
+});
+
+</script>
+<script>
+
+/* ---------- welding & QC ---------- */
+const SUB_ORDER = ['RMC', 'LMC', 'SHI', 'SWR'];
+dash.draw('sublegend', (el) => {
+  const d = dash.data('subcon');
+  if (d.status !== 'ok') { el.replaceChildren(); return; }
+  const subs = SUB_ORDER.filter((s) => d.data.some((r) => r.priority === SM.prio() && r.subcon === s));
+  el.replaceChildren(...subs.map((s) => {
+    const sp = document.createElement('span'); const i = document.createElement('i'); i.className = 'sw';
+    i.style.background = SM.color(SUB_ORDER.indexOf(s)); sp.append(i, document.createTextNode(s)); return sp;
+  }));
+});
+
+dash.draw('subweekly', (el) => {
+  const d = dash.data('subcon');
+  if (d.status !== 'ok') return SM.placeholder(el, d.status === 'loading' ? 'loading' : 'error');
+  const rows = d.data.filter((r) => r.priority === SM.prio());
+  if (!rows.length) return SM.empty(el, 'ไม่มีข้อมูลแยกผู้รับเหมาสำหรับ Priority นี้');
+  const weeks = [...new Set(rows.map((r) => r.week))].sort();
+  const subs = SUB_ORDER.filter((s) => rows.some((r) => r.subcon === s));
+  SM.weekBars(el, {
+    label: 'DB ที่เชื่อมรายสัปดาห์แยกผู้รับเหมา',
+    weeks,
+    groups: subs.map((s) => ({ label: s, color: SM.color(SUB_ORDER.indexOf(s)), vals: new Map(rows.filter((r) => r.subcon === s).map((r) => [r.week, +r.db])) })),
+  });
+});
+
+dash.draw('subtable', (tb) => {
+  const d = dash.data('subcon_totals');
+  if (d.status !== 'ok') { tb.replaceChildren(); return; }
+  const rows = d.data.filter((r) => r.priority === SM.prio()).sort((a, b) => SUB_ORDER.indexOf(a.subcon) - SUB_ORDER.indexOf(b.subcon));
+  tb.replaceChildren(...rows.map((r) => {
+    const tr = document.createElement('tr');
+    tr.setAttribute('data-key', SM.enc(r.priority) + ',' + SM.enc(r.subcon));
+    for (const [v, f] of [[r.subcon, null], [r.db, 1], [r.last4, 1], [r.best, 1], [r.weeks, 1]]) {
+      const td = document.createElement('td'); td.textContent = f ? SM.fmt(v) : v; tr.append(td);
+    }
+    return tr;
+  }));
+});
+
+dash.draw('jointmat', (el) => {
+  const d = dash.data('joint_mat');
+  if (d.status !== 'ok') return SM.placeholder(el, d.status === 'loading' ? 'loading' : 'error');
+  const rows = d.data.filter((r) => r.key === SM.prio()).sort((a, b) => b.joints - a.joints);
+  SM.hbars(el, {
+    label: 'จำนวน joint ที่เชื่อมแล้วและยังไม่มีวันเชื่อมแยกตามวัสดุ',
+    rows: rows.map((r) => ({ label: r.material, totalText: SM.fmt(r.welded) + ' / ' + SM.fmt(r.joints),
+      parts: [{ label: 'เชื่อมแล้ว', v: r.welded, color: SM.color(0) }, { label: 'ยังไม่มีวันเชื่อม', v: r.joints - r.welded, color: 'var(--cds-chart-muted)' }] })),
+    rowH: 28,
+  });
+});
+
+dash.draw('qctable', (tb) => {
+  const d = dash.data('joint_mat');
+  if (d.status !== 'ok') { tb.replaceChildren(); return; }
+  const rows = d.data.filter((r) => r.key === SM.prio()).sort((a, b) => b.joints - a.joints);
+  tb.replaceChildren(...rows.map((r) => {
+    const tr = document.createElement('tr');
+    tr.setAttribute('data-key', SM.enc(r.key) + ',' + SM.enc(r.material));
+    for (const [v, f] of [[r.material, 0], [r.joints, 1], [r.welded, 1], [r.db, 1], [r.rt, 1], [r.rt_rate, 2]]) {
+      const td = document.createElement('td'); td.textContent = f === 0 ? v : f === 2 ? (v == null ? '—' : SM.f1(v)) : SM.fmt(v); tr.append(td);
+    }
+    return tr;
+  }));
+});
+
+</script>
+<script>
+
+/* ---------- mechanical ---------- */
+dash.calc('mech_totals', {
+  title: 'Mechanical รวมตาม Priority',
+  description: 'Equipment แต่ละ Step (D1-Data Input) และ ITR ที่ต้องทำ/เสร็จ (D1-ITR Matrix) ตาม Priority ที่เลือก',
+  inputs: ['mech_steps', 'mech_itr'],
+  fn: (mech_steps, mech_itr) => ['Overall', 'E08', 'E04', 'E04-01', 'E04-02', 'E04-03', 'E07'].map((key) => {
+    const inKey = (a) => key === 'Overall' || String(a || '').startsWith(key);
+    const st = mech_steps.filter((r) => inKey(r.area));
+    const it = mech_itr.filter((r) => inKey(r.area));
+    const s = (rows, f, t) => rows.filter((r) => !t || r.sheet_type === t).reduce((a, r) => a + (+r[f] || 0), 0);
+    const o = { key };
+    for (const f of ['static', 'rotating', 'total', 'step1', 'step2', 'step3', 'step4']) o[f] = s(st, f);
+    for (const f of ['step1', 'step2', 'step3', 'step4']) o[f + '_pct'] = o.total ? o[f] / o.total : null;
+    o.itr_required = s(it, 'required'); o.itr_done = s(it, 'completed'); o.itr_remain = o.itr_required - o.itr_done;
+    o.itr_pct = o.itr_required ? o.itr_done / o.itr_required : null;
+    const ar = s(it, 'required', 'A'), ad = s(it, 'completed', 'A'), br = s(it, 'required', 'B'), bd = s(it, 'completed', 'B');
+    o.a_pct = ar ? ad / ar : null; o.b_pct = br ? bd / br : null;
+    return o;
+  }),
+});
+
+dash.calc('mech_act', {
+  title: 'Mechanical activity รวมตาม Priority',
+  description: 'ผลรวมชีท Sum (Total, Actual work, Actual ITR, Remain) ต่อ Activity ตาม Priority ที่เลือก',
+  inputs: ['mech_activity'],
+  fn: (mech_activity) => {
+    const out = [];
+    for (const key of ['Overall', 'E08', 'E04', 'E04-01', 'E04-02', 'E04-03', 'E07']) {
+      const m = new Map();
+      for (const r of mech_activity) {
+        if (key !== 'Overall' && !String(r.area).startsWith(key)) continue;
+        if (!m.has(r.activity)) m.set(r.activity, { key, activity: r.activity, itr: r.itr, total: 0, actual_work: null, actual_itr: 0, remain: 0 });
+        const o = m.get(r.activity);
+        o.total += +r.total || 0; o.actual_itr += +r.actual_itr || 0; o.remain += +r.remain || 0;
+        if (r.actual_work !== null && r.actual_work !== '') o.actual_work = (o.actual_work || 0) + +r.actual_work;
+      }
+      for (const o of m.values()) { o.itr_pct = o.total ? o.actual_itr / o.total : null; out.push(o); }
+    }
+    return out;
+  },
+});
+
+dash.draw('mkpi', (el) => {
+  const f = el.dataset.k;
+  const d = dash.data('mech_totals');
+  if (d.status !== 'ok') { el.replaceChildren('—'); return; }
+  const key = SM.prio();
+  const row = d.data.find((r) => r.key === key);
+  const sp = document.createElement('span');
+  sp.setAttribute('data-source', 'mech_totals'); sp.setAttribute('data-field', f); sp.setAttribute('data-where', SM.where({ key }));
+  const v = row ? row[f] : null;
+  sp.textContent = v === null || v === undefined ? '—' : /pct$/.test(f) ? SM.fp(v) : SM.fmt(v);
+  el.replaceChildren(sp);
+});
+
+dash.draw('mechsteps', (el) => {
+  const d = dash.data('mech_totals');
+  if (d.status !== 'ok') return SM.placeholder(el, d.status === 'loading' ? 'loading' : 'error');
+  const o = d.data.find((r) => r.key === SM.prio());
+  if (!o || !o.total) return SM.empty(el, 'ไม่มีข้อมูลสำหรับ Priority นี้');
+  const mk = (lab, f) => ({ label: lab, totalText: SM.fp(o[f + '_pct'] || 0),
+    parts: [{ label: 'ผ่านแล้ว', v: o[f], color: SM.color(0) }, { label: 'คงเหลือ', v: Math.max(0, o.total - o[f]), color: 'var(--cds-chart-muted)' }] });
+  SM.hbars(el, { label: 'จำนวน equipment ที่ผ่านแต่ละ step', rowH: 34,
+    rows: [mk('1 Preparation & Padding', 'step1'), mk('2 Installation', 'step2'), mk('3 Alignment', 'step3'), mk('4 Final Inspection / Box-up', 'step4')] });
+});
+
+dash.draw('mechareatable', (tb) => {
+  const d = dash.data('mech_steps');
+  if (d.status !== 'ok') { tb.replaceChildren(); return; }
+  tb.replaceChildren(...d.data.map((r) => {
+    const tr = document.createElement('tr');
+    const c0 = document.createElement('td'); c0.textContent = r.area; tr.append(c0);
+    for (const f of ['static', 'rotating', 'total', 'step1', 'step2', 'step3', 'step4']) {
+      const td = document.createElement('td'); td.textContent = SM.fmt(+r[f]);
+      if (f.startsWith('step')) {
+        const p = +r.total ? +r[f] / +r.total : 0;
+        td.className = 'hm';
+        td.style.background = `color-mix(in srgb, ${SM.color(0)} ${Math.round(p * 70)}%, transparent)`;
+        if (p >= 0.6) td.style.color = 'var(--color-bg)';
+      }
+      tr.append(td);
+    }
+    return tr;
+  }));
+});
+
+dash.draw('mechact', (tb) => {
+  const d = dash.data('mech_act');
+  if (d.status !== 'ok') { tb.replaceChildren(); return; }
+  const rows = d.data.filter((r) => r.key === SM.prio());
+  tb.replaceChildren(...rows.map((r) => {
+    const tr = document.createElement('tr');
+    tr.setAttribute('data-key', SM.enc(r.key) + ',' + SM.enc(r.activity));
+    const cell = (t, cls) => { const td = document.createElement('td'); if (cls) td.className = cls; td.textContent = t; tr.append(td); return td; };
+    cell(r.activity, 'l'); cell(r.itr, 'l');
+    cell(SM.fmt(r.total)); cell(r.actual_work === null ? '—' : SM.fmt(r.actual_work)); cell(SM.fmt(r.actual_itr)); cell(SM.fmt(r.remain));
+    const td = cell(r.itr_pct === null ? '—' : SM.fp(r.itr_pct));
+    if (r.itr_pct !== null) {
+      const bar = document.createElement('span'); bar.className = 'sm-pbar';
+      const fill = document.createElement('i'); fill.style.width = Math.min(100, r.itr_pct * 100) + '%'; fill.style.background = SM.color(0);
+      bar.append(fill); td.append(bar);
+    }
+    return tr;
+  }));
+});
+
+dash.draw('mechitr', (el) => {
+  const d = dash.data('mech_itr');
+  if (d.status !== 'ok') return SM.placeholder(el, d.status === 'loading' ? 'loading' : 'error');
+  const key = SM.prio();
+  const rows = d.data.filter((r) => key === 'Overall' || String(r.area).startsWith(key));
+  const g = d3.rollup(rows, (v) => ({ name: v[0].itr_name, t: d3.sum(v, (r) => +r.required), c: d3.sum(v, (r) => +r.completed) }), (r) => r.itr);
+  const list = [...g.entries()].map(([code, o]) => ({ code, ...o })).sort((a, b) => (b.t - b.c) - (a.t - a.c) || b.t - a.t);
+  SM.hbars(el, {
+    label: 'Mechanical ITR แต่ละประเภท: เสร็จและคงเหลือ', rowH: 26,
+    rows: list.map((o) => {
+      const nm = o.code.replace(/-S$/, '') + ' ' + o.name.toLowerCase();
+      return { label: nm.length > 40 ? nm.slice(0, 38) + '…' : nm, totalText: `${SM.fmt(o.c)}/${SM.fmt(o.t)}`,
+        parts: [{ label: 'เสร็จ', v: o.c, color: SM.color(0) }, { label: 'คงเหลือ', v: o.t - o.c, color: 'var(--cds-chart-muted)' }] };
+    }),
+  });
+});
+
+dash.draw('mechburn', (el) => {
+  const st = SM.state(['mech_weekly', 'mech_itr']);
+  if (st !== 'ok') return SM.placeholder(el, st);
+  const key = SM.prio();
+  const inKey = (a) => key === 'Overall' || String(a).startsWith(key);
+  const byW = d3.rollup(dash.data('mech_weekly').data.filter((r) => inKey(r.area)), (v) => d3.sum(v, (r) => +r.completed), (r) => r.week);
+  const weeks = [...byW.keys()].sort();
+  let c = 0;
+  const pts = weeks.map((w) => ({ d: SM.parse(w), v: (c += byW.get(w)) }));
+  const total = d3.sum(dash.data('mech_itr').data.filter((r) => inKey(r.area)), (r) => +r.required);
+  SM.lines(el, { label: 'Mechanical ITR ที่เสร็จสะสมรายสัปดาห์', series: [{ label: 'เสร็จสะสม', color: SM.color(0), pts }], ref: { v: total, label: 'ทั้งหมดที่ต้องทำ' } });
+});
+
+</script>
+<script>
+
+/* ---------- progress (CMS) & manpower ---------- */
+dash.calc('cms_disc', {
+  title: 'Weighted progress ราย Discipline',
+  description: 'รวมแถว discipline ใน CMS แบบถ่วงน้ำหนักด้วย MHrs ตาม Priority ที่เลือก',
+  inputs: ['cms_progress'],
+  fn: (cms_progress) => {
+    const out = [];
+    const disc = cms_progress.filter((r) => r.level === 'discipline');
+    for (const key of ['Overall', 'E08', 'E04', 'E04-01', 'E04-02', 'E04-03', 'E07']) {
+      const m = new Map();
+      for (const r of disc) {
+        if (key !== 'Overall' && !String(r.key).startsWith(key)) continue;
+        const mh = +r.mhrs || 0;
+        if (!m.has(r.discipline)) m.set(r.discipline, { key, discipline: r.discipline, mhrs: 0, a: 0, p: 0, f: 0, fmh: 0, w: 0 });
+        const o = m.get(r.discipline);
+        o.mhrs += mh; o.a += mh * (+r.actual || 0); o.p += mh * (+r.plan || 0); o.w += mh * (+r.wk_actual || 0);
+        if (r.forecast !== null && r.forecast !== '') { o.f += mh * +r.forecast; o.fmh += mh; }
+      }
+      for (const o of m.values()) {
+        out.push({ key, discipline: o.discipline, mhrs: o.mhrs, actual: o.mhrs ? o.a / o.mhrs : null, plan: o.mhrs ? o.p / o.mhrs : null,
+          forecast: o.fmh ? o.f / o.fmh : null, wk_actual: o.mhrs ? o.w / o.mhrs : null, earned_mhrs: o.a });
+      }
+    }
+    return out;
+  },
+});
+
+dash.calc('pipe_productivity', {
+  title: 'ผลงานงานท่อต่อ manpower',
+  description: 'DB เชื่อมรายสัปดาห์จากบันทึกการเชื่อม (Weld Log) และ ITR 118A/119A/120A ต่อสัปดาห์ (Pkg Commodity) หารด้วย Actual manpower Piping แล้วคูณ 100',
+  inputs: ['weld_weekly', 'weekly', 'manpower'],
+  fn: (weld_weekly, weekly, manpower) => {
+    const mp = new Map(manpower.filter((r) => r.group === 'discipline' && r.name === 'Piping' && r.type === 'Actual').map((r) => [r.week, +r.mp]));
+    const db = new Map(), itr = new Map();
+    for (const r of weld_weekly) db.set(r.week, (db.get(r.week) || 0) + (+r.db || 0));
+    for (const r of weekly) {
+      if (r.priority !== 'Overall' || r.actual_inc === null || r.actual_inc === '') continue;
+      if (['Piping Line Check (ITR 118A)', 'Hydrotest (ITR 119A)', 'Reinstatement (ITR 120A)'].includes(r.activity)) itr.set(r.week, (itr.get(r.week) || 0) + +r.actual_inc);
+    }
+    return [...mp.keys()].sort().filter((w) => mp.get(w) > 0 && (db.has(w) || itr.has(w))).map((w) => ({
+      week: w, piping_mp: mp.get(w), db: db.get(w) ?? null, itr: itr.get(w) ?? null,
+      db_per_100: db.has(w) ? (db.get(w) / mp.get(w)) * 100 : null, itr_per_100: itr.has(w) ? (itr.get(w) / mp.get(w)) * 100 : null,
+    }));
+  },
+});
+
+window.PG = {
+  level: (k) => (k === 'Overall' ? 'project' : k.length === 3 ? 'wbs' : 'priority'),
+  mpName: (k) => (k === 'Overall' ? 'Direct รวม' : k.slice(0, 3) + ' รวม'),
+  mpGroup: (k) => (k === 'Overall' ? 'discipline' : 'area'),
+  pct1: d3.format('.1%'),
+  pp: (v) => (v >= 0 ? '+' : '') + d3.format('.1f')(v * 100) + ' pp',
+};
+
+dash.draw('pkpi', (el) => {
+  const f = el.dataset.k;
+  const d = dash.data('cms_progress');
+  if (d.status !== 'ok') { el.replaceChildren('—'); return; }
+  const key = SM.prio(), level = PG.level(key);
+  const row = d.data.find((r) => r.level === level && r.key === key);
+  const sp = document.createElement('span');
+  sp.setAttribute('data-source', 'cms_progress'); sp.setAttribute('data-field', f); sp.setAttribute('data-where', SM.where({ level, key }));
+  const v = row ? SM.num(row[f]) : null;
+  sp.textContent = v === null ? '—' : /^var_/.test(f) ? PG.pp(v) : /mhrs$/.test(f) ? SM.fmt(v) : PG.pct1(v);
+  if (/^var_/.test(f) && v !== null) sp.style.color = v < -0.005 ? 'var(--color-bad)' : 'var(--color-ok)';
+  el.replaceChildren(sp);
+});
+
+dash.draw('mpkpi', (el) => {
+  const t = { actual: 'Actual', forecast: 'Forecast', plan: 'Plan' }[el.dataset.k];
+  const d = dash.data('manpower');
+  if (d.status !== 'ok') { el.replaceChildren('—'); return; }
+  const key = SM.prio(), name = PG.mpName(key), group = PG.mpGroup(key);
+  const week = d3.max(d.data.filter((r) => r.name === name && r.type === 'Actual'), (r) => r.week);
+  const row = d.data.find((r) => r.group === group && r.name === name && r.type === t && r.week === week);
+  const sp = document.createElement('span');
+  sp.setAttribute('data-source', 'manpower'); sp.setAttribute('data-field', 'mp');
+  sp.setAttribute('data-where', SM.where({ group, name, type: t, week: week || '' }));
+  sp.textContent = row ? SM.fmt(+row.mp) : '—';
+  el.replaceChildren(sp);
+});
+
+dash.draw('pgdisc', (el) => {
+  const d = dash.data('cms_disc');
+  if (d.status !== 'ok') return SM.placeholder(el, d.status === 'loading' ? 'loading' : 'error');
+  const rows = d.data.filter((r) => r.key === SM.prio()).sort((a, b) => b.mhrs - a.mhrs);
+  if (!rows.length) return SM.empty(el, 'ไม่มีข้อมูล');
+  const rowH = 34, h = rows.length * rowH + 10;
+  el.replaceChildren();
+  const W = Math.max(260, el.clientWidth || 600);
+  const svg = d3.select(el).append('svg').attr('width', '100%').attr('height', h).attr('viewBox', `0 0 ${W} ${h}`)
+    .attr('role', 'img').attr('aria-label', 'Weighted progress แต่ละ discipline เทียบ Forecast-3');
+  const t = svg.append('text').attr('x', -999);
+  let lw = 0; for (const r of rows) { t.text(r.discipline); lw = Math.max(lw, t.node().getComputedTextLength() || r.discipline.length * 7); } t.remove();
+  lw = Math.min(W * 0.45, lw + 10);
+  const x = d3.scaleLinear().domain([0, 1]).range([lw, W - 120]);
+  const tip = SM.tooltip(el);
+  rows.forEach((r, i) => {
+    const g = svg.append('g').attr('transform', `translate(0,${i * rowH + 4})`);
+    g.append('text').attr('x', lw - 8).attr('y', rowH / 2).attr('dy', '0.32em').attr('text-anchor', 'end').text(r.discipline);
+    g.append('rect').attr('x', x(0)).attr('y', 6).attr('height', rowH - 14).attr('width', x(1) - x(0)).style('fill', 'var(--cds-chart-grid)');
+    g.append('rect').attr('x', x(0)).attr('y', 6).attr('height', rowH - 14).attr('width', Math.max(0, x(Math.min(1, r.actual)) - x(0))).style('fill', SM.color(0));
+    if (r.forecast !== null) g.append('line').attr('x1', x(Math.min(1, r.forecast))).attr('x2', x(Math.min(1, r.forecast))).attr('y1', 2).attr('y2', rowH - 4).style('stroke', SM.color(1)).attr('stroke-width', 2.5);
+    const gap = r.forecast !== null ? r.actual - r.forecast : null;
+    const lab = g.append('text').attr('x', x(1) + 6).attr('y', rowH / 2).attr('dy', '0.32em').text(PG.pct1(r.actual) + (gap !== null ? ` (${PG.pp(gap)})` : ''));
+    if (gap !== null && gap < -0.005) lab.style('fill', 'var(--color-bad)');
+    g.append('rect').attr('width', W).attr('height', rowH).attr('fill', 'transparent')
+      .on('pointermove', (ev) => {
+        const [px, py] = d3.pointer(ev, svg.node()); const sr = svg.node().getBoundingClientRect();
+        tip.show(r.discipline, [`Actual: ${PG.pct1(r.actual)}`, `Forecast-3: ${r.forecast === null ? '—' : PG.pct1(r.forecast)}`, `Plan: ${PG.pct1(r.plan)}`, `MHrs: ${SM.fmt(r.mhrs)}`], (px / W) * sr.width, (py / h) * sr.height);
+      })
+      .on('pointerleave', () => tip.hide());
+  });
+});
+
+dash.draw('pgtable', (tb) => {
+  const d = dash.data('cms_progress');
+  if (d.status !== 'ok') { tb.replaceChildren(); return; }
+  const order = ['E08-01', 'E08-02', 'E04-01', 'E04-02', 'E04-03', 'E07'];
+  const out = [];
+  for (const k of order) {
+    const p = d.data.find((r) => r.level === 'priority' && r.key === k);
+    const ds = d.data.filter((r) => r.level === 'discipline' && r.key === k);
+    for (const r of [p, ...ds].filter(Boolean)) {
+      const tr = document.createElement('tr');
+      if (r.level === 'priority') tr.className = 'tot';
+      tr.setAttribute('data-key', SM.enc(r.key) + ',' + SM.enc(r.name));
+      const c0 = document.createElement('td'); c0.className = 'l';
+      c0.textContent = r.level === 'priority' ? `${r.key} · ${r.name}` : '   ' + r.discipline;
+      if (r.level !== 'priority') c0.style.paddingLeft = '20px';
+      tr.append(c0);
+      for (const f of ['mhrs', 'plan', 'forecast', 'actual', 'wk_actual', 'var_forecast']) {
+        const td = document.createElement('td'); const v = SM.num(r[f]);
+        td.textContent = v === null ? '—' : f === 'mhrs' ? SM.fmt(v) : f === 'var_forecast' ? PG.pp(v) : PG.pct1(v);
+        if (f === 'var_forecast' && v !== null && v < -0.005) td.style.color = 'var(--color-bad)';
+        tr.append(td);
+      }
+      out.push(tr);
+    }
+  }
+  tb.replaceChildren(...out);
+});
+
+dash.draw('mpmult', (el) => {
+  const st = SM.state(['manpower', 'cms_disc']);
+  if (st !== 'ok') return SM.placeholder(el, st);
+  const mp = dash.data('manpower').data.filter((r) => r.group === 'discipline' && r.week <= '2026-12-31');
+  const disc = dash.data('cms_disc').data.filter((r) => r.key === 'Overall');
+  const map = { Piping: 'Piping Works - Erection', Structure: 'Steel Structural Work', Mechanical: 'Equipment Installation', Common: null };
+  el.replaceChildren();
+  for (const name of ['Piping', 'Mechanical', 'Structure', 'Common']) {
+    const box = document.createElement('div');
+    const t = document.createElement('div'); t.className = 'sm-mtitle';
+    const cd = map[name] ? disc.find((r) => r.discipline === map[name]) : null;
+    t.textContent = name + (cd ? ` · progress ${PG.pct1(cd.actual)}${cd.forecast !== null ? ' (F-3 ' + PG.pct1(cd.forecast) + ')' : ''}` : '');
+    const c = document.createElement('div'); c.className = 'sm-chart';
+    box.append(t, c); el.append(box);
+    const s = (ty) => mp.filter((r) => r.name === name && r.type === ty && !(ty !== 'Actual' && +r.mp === 0 && r.week > '2026-08-28')).map((r) => ({ d: SM.parse(r.week), v: +r.mp }));
+    SM.lines(c, { h: 170, label: `Manpower ${name}: Actual, Forecast-3, Plan`,
+      series: [{ label: 'Plan', color: 'var(--cds-chart-muted)', dashed: true, pts: s('Plan') }, { label: 'Forecast-3', color: SM.color(1), pts: s('Forecast') }, { label: 'Actual', color: SM.color(0), pts: s('Actual') }] });
+  }
+});
+
+dash.draw('mparea', (el) => {
+  const d = dash.data('manpower');
+  if (d.status !== 'ok') return SM.placeholder(el, d.status === 'loading' ? 'loading' : 'error');
+  const key = SM.prio(), name = PG.mpName(key), group = PG.mpGroup(key);
+  const rows = d.data.filter((r) => r.group === group && r.name === name && r.week <= '2026-12-31');
+  const s = (ty) => rows.filter((r) => r.type === ty && !(ty !== 'Actual' && +r.mp === 0 && r.week > '2026-08-28')).map((r) => ({ d: SM.parse(r.week), v: +r.mp }));
+  SM.lines(el, { label: `Manpower ${name}: Actual, Forecast-3, Plan`,
+    series: [{ label: 'Plan', color: 'var(--cds-chart-muted)', dashed: true, pts: s('Plan') }, { label: 'Forecast-3', color: SM.color(1), pts: s('Forecast') }, { label: 'Actual', color: SM.color(0), pts: s('Actual') }] });
+});
+
+dash.draw('pgprod', (el) => {
+  const d = dash.data('pipe_productivity');
+  if (d.status !== 'ok') return SM.placeholder(el, d.status === 'loading' ? 'loading' : 'error');
+  const rows = d.data;
+  SM.lines(el, { label: 'DB เชื่อมและ ITR ต่อ Piping manpower 100 คนรายสัปดาห์',
+    series: [
+      { label: 'DB / 100 คน', color: SM.color(0), pts: rows.filter((r) => r.db_per_100 !== null).map((r) => ({ d: SM.parse(r.week), v: r.db_per_100 })) },
+      { label: 'ITR / 100 คน', color: SM.color(2), pts: rows.filter((r) => r.itr_per_100 !== null).map((r) => ({ d: SM.parse(r.week), v: r.itr_per_100 })) },
+    ] });
+});
+
+dash.draw('pgmcqp', (el) => {
+  const d = dash.data('cms_mcqp');
+  if (d.status !== 'ok') return SM.placeholder(el, d.status === 'loading' ? 'loading' : 'error');
+  const key = SM.prio();
+  const rows = d.data.filter((r) => r.category === 'Pipe Test & Reinstatement' && (key === 'Overall' || String(r.priority).startsWith(key)));
+  SM.hbars(el, { label: 'MCQP Pipe Test & Reinstatement ที่ส่งและอนุมัติแล้วแต่ละ Priority', rowH: 30,
+    rows: rows.map((r) => ({ label: r.priority, totalText: `${SM.fmt(+r.approved)} / ${SM.fmt(+r.total)} อนุมัติ`,
+      parts: [{ label: 'อนุมัติ', v: +r.approved, color: SM.color(0) }, { label: 'ส่งแล้ว รออนุมัติ', v: Math.max(0, r.submitted - r.approved), color: SM.color(1) }, { label: 'ยังไม่ส่ง', v: Math.max(0, r.total - r.submitted), color: 'var(--cds-chart-muted)' }] })) });
+});
+
+</script>
+<script>
+
+/* ---------- CMS bill & price ---------- */
+dash.calc('bill_value', {
+  title: 'มูลค่างานราย Bill',
+  description: 'มูลค่าที่ทำได้ = Current Price × Actual % ต่อแถว; ยอดรวมใช้เฉพาะแถวระดับ Bill',
+  inputs: ['cms_bill'],
+  fn: (cms_bill) => {
+    const rows = cms_bill.map((r) => {
+      const p = +r.current_price || 0, a = +r.actual || 0;
+      return { order: r.order, part: r.part, level: r.level, bill: r.bill, current_price: p, earned_value: p * a, remaining_value: p * (1 - a) };
+    });
+    const bills = rows.filter((r) => r.level === 'bill');
+    const earned = bills.reduce((s, r) => s + r.earned_value, 0), price = bills.reduce((s, r) => s + r.current_price, 0);
+    rows.push({ order: 'total', part: 'Combined', level: 'summary', bill: '', current_price: price, earned_value: earned, remaining_value: price - earned });
+    return rows;
+  },
+});
+
+window.CMS = {
+  mb: (v) => (v === null || v === undefined || isNaN(v) ? '—' : d3.format(',.1f')(v / 1e6)),
+  rowOf: (k) => (k === 'o' ? { part: 'Combined', level: 'total' } : k === 's5' ? { part: 'SMP5', level: 'total' } : { part: 'SMP5.1', level: 'total' }),
+};
+
+dash.draw('bkpi', (el) => {
+  const [k, f] = el.dataset.k.split('|');
+  const d = dash.data('cms_bill');
+  if (d.status !== 'ok') { el.replaceChildren('—'); return; }
+  const want = CMS.rowOf(k);
+  const idx = d.data.findIndex((r) => r.part === want.part && r.level === want.level);
+  const row = d.data[idx];
+  const sp = document.createElement('span');
+  sp.setAttribute('data-source', 'cms_bill'); sp.setAttribute('data-field', f);
+  if (row) sp.setAttribute('data-where', SM.where({ order: row.order }));
+  const v = row ? SM.num(row[f]) : null;
+  sp.textContent = v === null ? '—' : /price/.test(f) ? CMS.mb(v) + ' MB' : PG.pct1(v);
+  el.replaceChildren(sp);
+});
+
+dash.draw('vkpi', (el) => {
+  const f = el.dataset.k;
+  const d = dash.data('bill_value');
+  if (d.status !== 'ok') { el.replaceChildren('—'); return; }
+  const row = d.data.find((r) => r.order === 'total');
+  const sp = document.createElement('span');
+  sp.setAttribute('data-source', 'bill_value'); sp.setAttribute('data-field', f); sp.setAttribute('data-where', 'order=total');
+  sp.textContent = row ? CMS.mb(row[f]) + ' MB' : '—';
+  el.replaceChildren(sp);
+});
+
+dash.draw('billbar', (el) => {
+  const d = dash.data('cms_bill');
+  if (d.status !== 'ok') return SM.placeholder(el, d.status === 'loading' ? 'loading' : 'error');
+  const rows = d.data.filter((r) => r.level === 'bill' || r.level === 'total');
+  const rowH = 32, h = rows.length * rowH + 10;
+  el.replaceChildren();
+  const W = Math.max(260, el.clientWidth || 600);
+  const svg = d3.select(el).append('svg').attr('width', '100%').attr('height', h).attr('viewBox', `0 0 ${W} ${h}`).attr('role', 'img').attr('aria-label', 'Progress แต่ละ Bill เทียบ Forecast-3');
+  const lab = (r) => (r.level === 'total' ? r.description : `${r.bill} ${r.description}`);
+  const t = svg.append('text').attr('x', -999); let lw = 0;
+  for (const r of rows) { t.text(lab(r)); lw = Math.max(lw, t.node().getComputedTextLength() || lab(r).length * 7); } t.remove();
+  lw = Math.min(W * 0.48, lw + 10);
+  const x = d3.scaleLinear().domain([0, 1]).range([lw, W - 110]);
+  const tip = SM.tooltip(el);
+  rows.forEach((r, i) => {
+    const g = svg.append('g').attr('transform', `translate(0,${i * rowH + 4})`);
+    const name = lab(r);
+    const tx = g.append('text').attr('x', lw - 8).attr('y', rowH / 2).attr('dy', '0.32em').attr('text-anchor', 'end').text(name.length > 32 ? name.slice(0, 30) + '…' : name);
+    if (r.level === 'total') tx.style('font-weight', 'var(--cds-font-weight-medium)');
+    g.append('rect').attr('x', x(0)).attr('y', 6).attr('height', rowH - 14).attr('width', x(1) - x(0)).style('fill', 'var(--cds-chart-grid)');
+    g.append('rect').attr('x', x(0)).attr('y', 6).attr('height', rowH - 14).attr('width', Math.max(0, x(Math.min(1, +r.actual || 0)) - x(0))).style('fill', SM.color(0)).style('opacity', r.level === 'total' ? 1 : 0.85);
+    const f = SM.num(r.forecast);
+    if (f !== null) g.append('line').attr('x1', x(Math.min(1, f))).attr('x2', x(Math.min(1, f))).attr('y1', 2).attr('y2', rowH - 4).style('stroke', SM.color(1)).attr('stroke-width', 2.5);
+    const gap = f !== null ? (+r.actual || 0) - f : null;
+    const lt = g.append('text').attr('x', x(1) + 6).attr('y', rowH / 2).attr('dy', '0.32em').text(PG.pct1(+r.actual || 0) + (gap !== null ? ` (${PG.pp(gap)})` : ''));
+    if (gap !== null && gap < -0.005) lt.style('fill', 'var(--color-bad)');
+    g.append('rect').attr('width', W).attr('height', rowH).attr('fill', 'transparent')
+      .on('pointermove', (ev) => {
+        const [px, py] = d3.pointer(ev, svg.node()); const sr = svg.node().getBoundingClientRect();
+        tip.show(name, [`Actual: ${PG.pct1(+r.actual || 0)}`, `Forecast-3: ${f === null ? '—' : PG.pct1(f)}`, `MHrs: ${SM.fmt(+r.mhrs)}`, `Current price: ${CMS.mb(+r.current_price)} MB`], (px / W) * sr.width, (py / h) * sr.height);
+      })
+      .on('pointerleave', () => tip.hide());
+  });
+});
+
+dash.draw('valuebar', (el) => {
+  const st = SM.state(['bill_value', 'cms_bill']);
+  if (st !== 'ok') return SM.placeholder(el, st);
+  const bills = dash.data('cms_bill').data;
+  const rows = dash.data('bill_value').data.filter((r) => r.level === 'bill');
+  SM.hbars(el, { label: 'มูลค่าที่ทำได้แล้วและคงเหลือของแต่ละ Bill (ล้านบาท)', rowH: 30,
+    rows: rows.map((r) => {
+      const b = bills.find((x) => x.order === r.order) || {};
+      const name = `${r.bill} ${b.description || ''}`;
+      return { label: name.length > 32 ? name.slice(0, 30) + '…' : name, totalText: `${CMS.mb(r.earned_value)} / ${CMS.mb(r.current_price)} MB`,
+        parts: [{ label: 'ทำได้แล้ว (บาท)', v: r.earned_value, color: SM.color(0) }, { label: 'คงเหลือ (บาท)', v: r.remaining_value, color: 'var(--cds-chart-muted)' }] };
+    }) });
+});
+
+dash.draw('billtable', (tb) => {
+  const st = SM.state(['cms_bill', 'bill_value']);
+  if (st !== 'ok') { tb.replaceChildren(); return; }
+  const val = new Map(dash.data('bill_value').data.map((r) => [r.order, r]));
+  tb.replaceChildren(...dash.data('cms_bill').data.map((r) => {
+    const tr = document.createElement('tr');
+    tr.setAttribute('data-key', SM.enc(r.order));
+    if (r.level === 'bill') tr.className = 'sub';
+    if (r.level === 'total') tr.className = r.part === 'Combined' ? 'tot grand' : 'tot sub';
+    const cell = (t, cls) => { const td = document.createElement('td'); if (cls) td.className = cls; td.textContent = t; tr.append(td); return td; };
+    cell(r.bill || '');
+    const d = cell(r.description, 'l');
+    if (r.level === 'item') d.style.paddingLeft = '28px';
+    if (r.level === 'sub') d.style.paddingLeft = '16px';
+    cell(r.uom || '');
+    const p = (f) => { const v = SM.num(r[f]); return v === null ? '—' : PG.pct1(v); };
+    cell(p('weight'));
+    cell(SM.num(r.mhrs) === null ? '—' : SM.fmt(+r.mhrs));
+    cell(SM.num(r.contract_price) === null ? '—' : CMS.mb(+r.contract_price));
+    cell(SM.num(r.current_price) === null ? '—' : CMS.mb(+r.current_price));
+    cell(p('plan')); cell(p('forecast')); cell(p('actual')); cell(p('wk_actual'));
+    const vf = SM.num(r.var_forecast);
+    const c = cell(vf === null ? '—' : PG.pp(vf));
+    if (vf !== null && vf < -0.005) c.style.color = 'var(--color-bad)';
+    const ev = val.get(r.order);
+    const vtd = document.createElement('td'); const sp = document.createElement('span');
+    sp.setAttribute('data-source', 'bill_value'); sp.setAttribute('data-field', 'earned_value'); sp.setAttribute('data-where', SM.where({ order: r.order }));
+    sp.textContent = ev ? CMS.mb(ev.earned_value) : '—'; vtd.append(sp); tr.append(vtd);
+    return tr;
+  }));
+});
+
+dash.draw('qtytable', (tb) => {
+  const d = dash.data('cms_qty');
+  if (d.status !== 'ok') { tb.replaceChildren(); return; }
+  const key = SM.prio();
+  const rows = d.data.filter((r) => (key === 'Overall' ? !r.priority : r.priority && (String(r.priority).startsWith(key) || key.startsWith(String(r.priority)))));
+  if (!rows.length) { const tr = document.createElement('tr'); const td = document.createElement('td'); td.colSpan = 11; td.className = 'l'; td.textContent = 'ไม่มีรายการแยกสำหรับ Priority นี้'; tr.append(td); tb.replaceChildren(tr); return; }
+  tb.replaceChildren(...rows.map((r) => {
+    const tr = document.createElement('tr');
+    tr.setAttribute('data-key', SM.enc(r.order));
+    const cell = (t, cls) => { const td = document.createElement('td'); if (cls) td.className = cls; td.textContent = t; tr.append(td); return td; };
+    const n = (f) => { const v = SM.num(r[f]); return v === null ? '—' : SM.fmt(v); };
+    cell(r.item); cell(r.description, 'l'); cell(r.priority || 'รวม'); cell(r.uom || '');
+    cell(n('budget_qty')); cell(n('current_qty')); cell(n('last_cum')); cell(n('wk_qty')); cell(n('cum_qty'));
+    const bal = SM.num(r.balance); const b = cell(n('balance'));
+    if (bal !== null && bal < 0) b.style.color = 'var(--color-bad)';
+    const cur = SM.num(r.current_qty), cum = SM.num(r.cum_qty);
+    const td = cell(cur && cum !== null ? SM.fp(cum / cur) : '—');
+    if (cur && cum !== null) {
+      const bar = document.createElement('span'); bar.className = 'sm-pbar';
+      const fill = document.createElement('i'); fill.style.width = Math.min(100, (cum / cur) * 100) + '%'; fill.style.background = SM.color(0);
+      bar.append(fill); td.append(bar);
+    }
+    return tr;
+  }));
+});
+
+</script>
+<script>
+
+/* ---------- combo S-curve, donuts, priority bars ---------- */
+window.VZ = {
+  donut(el, { slices, center, sub, label, fmtV }) {
+    el.replaceChildren();
+    const W = Math.max(260, el.clientWidth || 600);
+    const size = Math.min(260, W * 0.55);
+    const wrap = document.createElement('div');
+    wrap.style.display = 'flex'; wrap.style.flexWrap = 'wrap'; wrap.style.alignItems = 'center'; wrap.style.gap = '16px';
+    el.append(wrap);
+    const box = document.createElement('div'); box.style.position = 'relative'; box.style.width = size + 'px'; box.style.height = size + 'px'; box.style.flex = '0 0 auto';
+    wrap.append(box);
+    const total = d3.sum(slices, (s) => s.v);
+    const svg = d3.select(box).append('svg').attr('width', size).attr('height', size).attr('viewBox', `0 0 ${size} ${size}`).attr('role', 'img').attr('aria-label', label);
+    const g = svg.append('g').attr('transform', `translate(${size / 2},${size / 2})`);
+    const arc = d3.arc().innerRadius(size * 0.31).outerRadius(size * 0.48).padAngle(0.012).cornerRadius(2);
+    const tip = SM.tooltip(el);
+    g.selectAll('path').data(d3.pie().sort(null).value((s) => s.v)(slices)).join('path').attr('d', arc).style('fill', (d) => d.data.color)
+      .on('pointermove', (ev, d) => {
+        const r = el.getBoundingClientRect();
+        tip.show(d.data.label, [`${fmtV(d.data.v)} (${d3.format('.1%')(d.data.v / total)})`, ...(d.data.extra || [])], ev.clientX - r.left, ev.clientY - r.top);
+      })
+      .on('pointerleave', () => tip.hide());
+    const c = svg.append('text').attr('x', size / 2).attr('y', size / 2 - 4).attr('text-anchor', 'middle').text(center)
+      .style('font-family', 'var(--font-anthropic-serif)').style('font-size', size > 200 ? '26px' : '20px').style('fill', 'var(--color-fg)');
+    svg.append('text').attr('x', size / 2).attr('y', size / 2 + 18).attr('text-anchor', 'middle').text(sub);
+    const list = document.createElement('div');
+    list.style.display = 'flex'; list.style.flexDirection = 'column'; list.style.gap = '6px'; list.style.fontSize = 'var(--cds-font-size-caption)'; list.style.minWidth = '180px'; list.style.flex = '1 1 180px';
+    for (const s of slices) {
+      const row = document.createElement('div'); row.style.display = 'flex'; row.style.gap = '8px'; row.style.alignItems = 'center';
+      const sw = document.createElement('i'); sw.className = 'sw'; sw.style.background = s.color; sw.style.flex = '0 0 auto';
+      const nm = document.createElement('span'); nm.textContent = s.label; nm.style.flex = '1 1 auto';
+      const vv = document.createElement('span'); vv.textContent = `${fmtV(s.v)} · ${d3.format('.0%')(s.v / total)}`; vv.style.fontVariantNumeric = 'tabular-nums'; vv.style.color = 'var(--color-fg-muted)';
+      row.append(sw, nm, vv); list.append(row);
+    }
+    wrap.append(list);
+  },
+};
+
+/* S-curve with weekly bars (replaces the line-only version) */
+dash.draw('pgscurve', (el) => {
+  const d = dash.data('cms_scurve');
+  if (d.status !== 'ok') return SM.placeholder(el, d.status === 'loading' ? 'loading' : 'error');
+  const key = SM.prio();
+  const rows = d.data.filter((r) => r.key === key).sort((a, b) => (a.week < b.week ? -1 : 1));
+  if (!rows.length) return SM.empty(el, 'ไม่มี S-Curve สำหรับ Priority นี้');
+  let pf = null;
+  const pts = rows.map((r) => {
+    const f = SM.num(r.forecast_cum); const fi = f === null || pf === null ? null : f - pf; if (f !== null) pf = f;
+    return { d: SM.parse(r.week), w: r.week, plan: SM.num(r.plan_cum), f, fi, a: SM.num(r.actual_cum), ai: SM.num(r.actual_inc) };
+  });
+  el.replaceChildren();
+  const h = 340, W = Math.max(280, el.clientWidth || 600);
+  const svg = d3.select(el).append('svg').attr('width', '100%').attr('height', h).attr('viewBox', `0 0 ${W} ${h}`).attr('role', 'img')
+    .attr('aria-label', 'S-curve ความก้าวหน้าสะสมพร้อมแท่งรายสัปดาห์ Actual และ Forecast-3');
+  const m = { t: 12, r: 46, b: 26, l: 44 };
+  const x = d3.scaleBand().domain(pts.map((p) => p.w)).range([m.l, W - m.r]).padding(0.25);
+  const xc = (w) => x(w) + x.bandwidth() / 2;
+  const y = d3.scaleLinear().domain([0, 1]).range([h - m.b, m.t]);
+  const incMax = d3.max(pts, (p) => Math.max(p.ai || 0, p.fi || 0)) || 0.01;
+  const y2 = d3.scaleLinear().domain([0, incMax * 2.4]).nice().range([h - m.b, m.t]);
+  svg.append('g').attr('class', 'grid').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(5).tickSize(-(W - m.l - m.r)).tickFormat(''));
+  svg.append('g').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(5).tickFormat(d3.format('.0%')).tickSize(0).tickPadding(6)).select('.domain').remove();
+  svg.append('g').attr('transform', `translate(${W - m.r},0)`).call(d3.axisRight(y2).ticks(4).tickFormat(d3.format('.1%')).tickSize(0).tickPadding(6)).select('.domain').remove();
+  const every = Math.max(1, Math.ceil(pts.length / Math.max(2, Math.floor((W - m.l - m.r) / 70))));
+  svg.append('g').attr('transform', `translate(0,${h - m.b})`).call(d3.axisBottom(x).tickValues(pts.filter((_, i) => i % every === 0).map((p) => p.w)).tickFormat((w) => d3.utcFormat('%b %y')(SM.parse(w))).tickSizeOuter(0));
+  const bw = x.bandwidth() / 2;
+  svg.append('g').selectAll('rect').data(pts.filter((p) => p.fi)).join('rect').attr('x', (p) => x(p.w)).attr('width', bw).attr('y', (p) => y2(Math.max(0, p.fi))).attr('height', (p) => y2(0) - y2(Math.max(0, p.fi))).style('fill', SM.color(1)).style('opacity', 0.45);
+  svg.append('g').selectAll('rect').data(pts.filter((p) => p.ai)).join('rect').attr('x', (p) => x(p.w) + bw).attr('width', bw).attr('y', (p) => y2(Math.max(0, p.ai))).attr('height', (p) => y2(0) - y2(Math.max(0, p.ai))).style('fill', SM.color(0)).style('opacity', 0.55);
+  const line = (k) => d3.line().defined((p) => p[k] !== null).x((p) => xc(p.w)).y((p) => y(p[k]));
+  svg.append('path').attr('d', line('plan')(pts)).attr('fill', 'none').style('stroke', 'var(--cds-chart-muted)').attr('stroke-width', 1.5).attr('stroke-dasharray', '5 4');
+  svg.append('path').attr('d', line('f')(pts)).attr('fill', 'none').style('stroke', SM.color(1)).attr('stroke-width', 2.25);
+  svg.append('path').attr('d', line('a')(pts)).attr('fill', 'none').style('stroke', SM.color(0)).attr('stroke-width', 2.75);
+  const last = [...pts].reverse().find((p) => p.a !== null);
+  if (last) {
+    svg.append('circle').attr('cx', xc(last.w)).attr('cy', y(last.a)).attr('r', 4).style('fill', SM.color(0));
+    const lf = pts.find((p) => p.w === last.w);
+    svg.append('text').attr('x', xc(last.w) - 6).attr('y', y(last.a) + 18).attr('text-anchor', 'end').text(`Actual ${PG.pct1(last.a)}`).style('fill', SM.color(0)).style('font-weight', '600');
+    if (lf && lf.f !== null) svg.append('text').attr('x', xc(last.w) - 6).attr('y', Math.max(m.t + 14, y(lf.f) - 8)).attr('text-anchor', 'end').text(`F-3 ${PG.pct1(lf.f)}`).style('fill', SM.color(1)).style('font-weight', '600');
+  }
+  const guide = svg.append('line').attr('y1', m.t).attr('y2', h - m.b).style('stroke', 'var(--cds-chart-axis)').style('display', 'none');
+  const tip = SM.tooltip(el);
+  svg.append('g').selectAll('rect').data(pts).join('rect').attr('x', (p) => x(p.w) - (x.step() - x.bandwidth()) / 2).attr('width', x.step()).attr('y', m.t).attr('height', h - m.t - m.b).attr('fill', 'transparent')
+    .on('pointermove', (ev, p) => {
+      guide.attr('x1', xc(p.w)).attr('x2', xc(p.w)).style('display', null);
+      const [px, py] = d3.pointer(ev, svg.node()); const sr = svg.node().getBoundingClientRect();
+      const f = (v) => (v === null ? '—' : PG.pct1(v));
+      tip.show('สัปดาห์สิ้นสุด ' + SM.fdate(p.d), [`Plan สะสม: ${f(p.plan)}`, `Forecast-3 สะสม: ${f(p.f)} (สัปดาห์ ${f(p.fi)})`, `Actual สะสม: ${f(p.a)} (สัปดาห์ ${f(p.ai)})`], (px / W) * sr.width, (py / h) * sr.height);
+    })
+    .on('pointerleave', () => { guide.style('display', 'none'); tip.hide(); });
+});
+
+dash.draw('valuedonut', (el) => {
+  const st = SM.state(['cms_bill', 'bill_value']);
+  if (st !== 'ok') return SM.placeholder(el, st);
+  const bills = dash.data('cms_bill').data.filter((r) => r.level === 'bill');
+  const tot = dash.data('bill_value').data.find((r) => r.order === 'total');
+  const vals = new Map(dash.data('bill_value').data.map((r) => [r.order, r]));
+  VZ.donut(el, {
+    label: 'สัดส่วนมูลค่างานปัจจุบันแยกตาม Bill', fmtV: (v) => CMS.mb(v) + ' MB',
+    center: tot ? d3.format('.0%')(tot.earned_value / tot.current_price) : '—', sub: tot ? `ทำได้ ${CMS.mb(tot.earned_value)} / ${CMS.mb(tot.current_price)} MB` : '',
+    slices: bills.map((b, i) => ({ label: `${b.bill} ${b.description}`, v: +b.current_price, color: SM.color(i),
+      extra: [`ทำได้แล้ว ${CMS.mb(vals.get(b.order)?.earned_value)} MB (${PG.pct1(+b.actual)})`] })),
+  });
+});
+
+dash.draw('remaindonut', (el) => {
+  const d = dash.data('cms_progress');
+  if (d.status !== 'ok') return SM.placeholder(el, d.status === 'loading' ? 'loading' : 'error');
+  const pr = d.data.filter((r) => r.level === 'priority').map((r) => ({ key: r.key, rem: (+r.mhrs || 0) * (1 - Math.min(1, +r.actual || 0)), act: +r.actual }))
+    .filter((r) => r.rem > 1).sort((a, b) => b.rem - a.rem);
+  const total = d3.sum(pr, (r) => r.rem);
+  const order = ['E04-02', 'E07', 'E04-01', 'E04-03', 'E08-01', 'E08-02'];
+  VZ.donut(el, {
+    label: 'MHrs ที่เหลือแยกตาม Priority', fmtV: (v) => SM.fmt(v) + ' MHrs',
+    center: d3.format(',.0f')(total / 1000) + 'k', sub: 'MHrs คงเหลือ',
+    slices: pr.map((r) => ({ label: r.key, v: r.rem, color: SM.color(Math.max(0, order.indexOf(r.key))), extra: [`Actual ${PG.pct1(r.act)}`] })),
+  });
+});
+
+dash.draw('priobar', (el) => {
+  const d = dash.data('cms_progress');
+  if (d.status !== 'ok') return SM.placeholder(el, d.status === 'loading' ? 'loading' : 'error');
+  const rows = ['E08-01', 'E08-02', 'E04-01', 'E04-02', 'E04-03', 'E07'].map((k) => d.data.find((r) => r.level === 'priority' && r.key === k)).filter(Boolean);
+  const proj = d.data.find((r) => r.level === 'project');
+  if (proj) rows.push({ ...proj, key: 'Overall' });
+  const rowH = 34, h = rows.length * rowH + 10;
+  el.replaceChildren();
+  const W = Math.max(260, el.clientWidth || 600);
+  const svg = d3.select(el).append('svg').attr('width', '100%').attr('height', h).attr('viewBox', `0 0 ${W} ${h}`).attr('role', 'img').attr('aria-label', 'Actual เทียบ Forecast-3 แต่ละ Priority');
+  const lw = 70, x = d3.scaleLinear().domain([0, 1]).range([lw, W - 120]);
+  const tip = SM.tooltip(el);
+  rows.forEach((r, i) => {
+    const a = +r.actual || 0, f = SM.num(r.forecast), gap = f === null ? null : a - f;
+    const g = svg.append('g').attr('transform', `translate(0,${i * rowH + 4})`);
+    const t = g.append('text').attr('x', lw - 8).attr('y', rowH / 2).attr('dy', '0.32em').attr('text-anchor', 'end').text(r.key === 'Overall' ? 'รวม' : r.key);
+    if (r.key === 'Overall') t.style('font-weight', '600');
+    g.append('rect').attr('x', x(0)).attr('y', 6).attr('height', rowH - 14).attr('width', x(1) - x(0)).style('fill', 'var(--cds-chart-grid)');
+    g.append('rect').attr('x', x(0)).attr('y', 6).attr('height', rowH - 14).attr('width', x(Math.min(1, a)) - x(0)).style('fill', gap !== null && gap < -0.15 ? 'var(--cds-chart-status-critical, var(--color-bad))' : SM.color(0));
+    if (f !== null) g.append('line').attr('x1', x(Math.min(1, f))).attr('x2', x(Math.min(1, f))).attr('y1', 2).attr('y2', rowH - 4).style('stroke', SM.color(1)).attr('stroke-width', 2.5);
+    const lt = g.append('text').attr('x', x(1) + 6).attr('y', rowH / 2).attr('dy', '0.32em').text(PG.pct1(a) + (gap !== null ? ` (${PG.pp(gap)})` : ''));
+    if (gap !== null && gap < -0.005) lt.style('fill', 'var(--color-bad)');
+    g.append('rect').attr('width', W).attr('height', rowH).attr('fill', 'transparent')
+      .on('pointermove', (ev) => { const [px, py] = d3.pointer(ev, svg.node()); const sr = svg.node().getBoundingClientRect();
+        tip.show(r.key === 'Overall' ? 'รวมทั้งโครงการ' : `${r.key} · ${r.name}`, [`Actual: ${PG.pct1(a)}`, `Forecast-3: ${f === null ? '—' : PG.pct1(f)}`, `สัปดาห์นี้: ${PG.pct1(+r.wk_actual || 0)}`], (px / W) * sr.width, (py / h) * sr.height); })
+      .on('pointerleave', () => tip.hide());
+  });
+});
+
+</script>
+<script>
+
+/* ---------- weld log ---------- */
+dash.calc('weld_pipe', {
+  title: 'สถานะ Test ของ package ที่เชื่อมแล้ว',
+  description: 'จับคู่ package ในบันทึกการเชื่อมกับรายการ Piping Package แล้วดูว่าผ่าน 118A/119A/120A หรือยัง (ตาม Priority ที่เลือก)',
+  inputs: ['weld_pkg', 'pkglist'],
+  fn: (weld_pkg, pkglist) => {
+    const pk = new Map(pkglist.map((p) => [String(p.package).trim(), p]));
+    const end = Date.parse('2026-11-13T00:00:00Z');
+    const out = [];
+    for (const key of ['Overall', 'E08', 'E04', 'E04-01', 'E04-02', 'E04-03', 'E07']) {
+      for (const w of weld_pkg) {
+        const pr = w.priority || '';
+        if (key !== 'Overall' && !pr.startsWith(key)) continue;
+        const p = pk.get(String(w.package).trim()) || {};
+        const stage = p.ri_date ? '4) 120A เสร็จแล้ว' : p.ht_date ? '3) ผ่าน 119A รอ 120A' : (p.lc_date || p.lc_note) ? '2) ผ่าน 118A รอ 119A' : '1) เชื่อมแล้ว รอ 118A';
+        out.push({ key, package: w.package, priority: pr, db: +w.db, joints: +w.joints, last_date: w.last_date,
+          idle_days: Math.round((end - Date.parse(w.last_date + 'T00:00:00Z')) / 864e5), stage, status: p.status || '' });
+      }
+    }
+    return out;
+  },
+});
+
+dash.calc('weld_totals', {
+  title: 'สรุปบันทึกการเชื่อมตาม Priority',
+  description: 'DB, joints, RT/PAUT, DB สัปดาห์ล่าสุด, เฉลี่ย 4 สัปดาห์ และจำนวน package ตามขั้น Test',
+  inputs: ['weld_weekly', 'weld_pipe'],
+  fn: (weld_weekly, weld_pipe) => {
+    const weeks = [...new Set(weld_weekly.map((r) => r.week))].sort();
+    const last = weeks[weeks.length - 1], last4 = new Set(weeks.slice(-4));
+    return ['Overall', 'E08', 'E04', 'E04-01', 'E04-02', 'E04-03', 'E07'].map((key) => {
+      const rows = weld_weekly.filter((r) => key === 'Overall' || String(r.priority).startsWith(key));
+      const s = (f, flt) => rows.filter(flt || (() => true)).reduce((a, r) => a + (+r[f] || 0), 0);
+      const db = s('db'), joints = s('joints'), rt = s('rt');
+      const pp = weld_pipe.filter((r) => r.key === key);
+      const r118 = pp.filter((r) => r.stage.startsWith('1)'));
+      return { key, db, joints, rt, rt_pct: joints ? rt / joints : null, last_db: s('db', (r) => r.week === last), avg4: s('db', (r) => last4.has(r.week)) / 4,
+        pkgs: pp.length, ready118: r118.length, ready118_db: r118.reduce((a, r) => a + r.db, 0), open120: pp.filter((r) => !r.stage.startsWith('4)')).length };
+    });
+  },
+});
+
+dash.calc('weld_rt', {
+  title: 'RT/PAUT coverage ตามวัสดุ',
+  description: 'จำนวน joint ที่มี RT/PAUT หารด้วย joint ทั้งหมด แยกวัสดุ ตาม Priority ที่เลือก',
+  inputs: ['weld_mix'],
+  fn: (weld_mix) => {
+    const out = [];
+    for (const key of ['Overall', 'E08', 'E04', 'E04-01', 'E04-02', 'E04-03', 'E07']) {
+      const m = new Map();
+      for (const r of weld_mix) {
+        if (key !== 'Overall' && !String(r.priority).startsWith(key)) continue;
+        if (!m.has(r.material)) m.set(r.material, { key, material: r.material, joints: 0, rt: 0, db: 0 });
+        const o = m.get(r.material); o.joints += +r.joints; o.rt += +r.rt; o.db += +r.db;
+      }
+      for (const o of m.values()) { o.rt_pct = o.joints ? o.rt / o.joints : null; out.push(o); }
+    }
+    return out;
+  },
+});
+
+window.WL = { inKey: (p) => SM.prio() === 'Overall' || String(p || '').startsWith(SM.prio()) };
+
+dash.draw('wkpi', (el) => {
+  const f = el.dataset.k;
+  const d = dash.data('weld_totals');
+  if (d.status !== 'ok') { el.replaceChildren('—'); return; }
+  const key = SM.prio(); const row = d.data.find((r) => r.key === key);
+  const sp = document.createElement('span');
+  sp.setAttribute('data-source', 'weld_totals'); sp.setAttribute('data-field', f); sp.setAttribute('data-where', SM.where({ key }));
+  const v = row ? row[f] : null;
+  sp.textContent = v === null || v === undefined ? '—' : f === 'rt_pct' ? d3.format('.1%')(v) : SM.fmt(v);
+  el.replaceChildren(sp);
+});
+
+dash.draw('wlweekly', (el) => {
+  const d = dash.data('weld_weekly');
+  if (d.status !== 'ok') return SM.placeholder(el, d.status === 'loading' ? 'loading' : 'error');
+  const rows = d.data.filter((r) => WL.inKey(r.priority));
+  if (!rows.length) return SM.empty(el, 'ไม่มีข้อมูลสำหรับ Priority นี้');
+  const weeks = [...new Set(d.data.map((r) => r.week))].sort();
+  const areas = ['E04', 'E07', 'E08'];
+  const by = d3.rollup(rows, (v) => d3.sum(v, (r) => +r.db), (r) => r.week, (r) => r.area);
+  let cum = 0;
+  const pts = weeks.map((w) => { const a = by.get(w) || new Map(); const o = { w, total: 0 }; for (const ar of areas) { o[ar] = a.get(ar) || 0; o.total += o[ar]; } cum += o.total; o.cum = cum; return o; });
+  el.replaceChildren();
+  const h = 330, W = Math.max(280, el.clientWidth || 600), m = { t: 12, r: 56, b: 26, l: 46 };
+  const svg = d3.select(el).append('svg').attr('width', '100%').attr('height', h).attr('viewBox', `0 0 ${W} ${h}`).attr('role', 'img').attr('aria-label', 'DB เชื่อมรายสัปดาห์แยก Area และเส้นสะสม');
+  const x = d3.scaleBand().domain(weeks).range([m.l, W - m.r]).padding(0.2);
+  const y = d3.scaleLinear().domain([0, d3.max(pts, (p) => p.total) || 1]).nice().range([h - m.b, m.t]);
+  const y2 = d3.scaleLinear().domain([0, cum || 1]).nice().range([h - m.b, m.t]);
+  svg.append('g').attr('class', 'grid').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(5).tickSize(-(W - m.l - m.r)).tickFormat(''));
+  svg.append('g').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(5).tickFormat(d3.format(',.0f')).tickSize(0).tickPadding(6)).select('.domain').remove();
+  svg.append('g').attr('transform', `translate(${W - m.r},0)`).call(d3.axisRight(y2).ticks(5).tickFormat(d3.format(',.0f')).tickSize(0).tickPadding(6)).select('.domain').remove();
+  const every = Math.max(1, Math.ceil(weeks.length / Math.max(2, Math.floor((W - m.l - m.r) / 64))));
+  svg.append('g').attr('transform', `translate(0,${h - m.b})`).call(d3.axisBottom(x).tickValues(weeks.filter((_, i) => i % every === 0)).tickFormat((w) => d3.utcFormat('%-d %b')(SM.parse(w))).tickSizeOuter(0));
+  const stack = d3.stack().keys(areas)(pts);
+  stack.forEach((layer, i) => svg.append('g').selectAll('rect').data(layer).join('rect').attr('x', (dd) => x(dd.data.w)).attr('width', x.bandwidth())
+    .attr('y', (dd) => y(dd[1])).attr('height', (dd) => y(dd[0]) - y(dd[1])).style('fill', SM.color(i)));
+  svg.append('path').attr('d', d3.line().x((p) => x(p.w) + x.bandwidth() / 2).y((p) => y2(p.cum))(pts)).attr('fill', 'none').style('stroke', SM.color(3)).attr('stroke-width', 2.5);
+  const tip = SM.tooltip(el);
+  svg.append('g').selectAll('rect').data(pts).join('rect').attr('x', (p) => x(p.w)).attr('width', x.step()).attr('y', m.t).attr('height', h - m.t - m.b).attr('fill', 'transparent')
+    .on('pointermove', (ev, p) => { const [px, py] = d3.pointer(ev, svg.node()); const sr = svg.node().getBoundingClientRect();
+      tip.show('สัปดาห์สิ้นสุด ' + SM.fdate(SM.parse(p.w)), [...areas.filter((a) => p[a]).map((a) => `${a}: ${SM.fmt(p[a])} DB`), `รวม: ${SM.fmt(p.total)} DB`, `สะสม: ${SM.fmt(p.cum)} DB`], (px / W) * sr.width, (py / h) * sr.height); })
+    .on('pointerleave', () => tip.hide());
+});
+
+dash.draw('wlpipe', (el) => {
+  const d = dash.data('weld_pipe');
+  if (d.status !== 'ok') return SM.placeholder(el, d.status === 'loading' ? 'loading' : 'error');
+  const rows = d.data.filter((r) => r.key === SM.prio());
+  const g = d3.rollup(rows, (v) => ({ n: v.length, db: d3.sum(v, (r) => r.db) }), (r) => r.stage);
+  const stages = ['1) เชื่อมแล้ว รอ 118A', '2) ผ่าน 118A รอ 119A', '3) ผ่าน 119A รอ 120A', '4) 120A เสร็จแล้ว'];
+  SM.hbars(el, { label: 'จำนวน package ที่เชื่อมแล้วในแต่ละขั้นของ Test', rowH: 34,
+    rows: stages.map((s, i) => { const o = g.get(s) || { n: 0, db: 0 }; return { label: s.slice(3), totalText: `${o.n} pkg · ${SM.fmt(o.db)} DB`,
+      parts: [{ label: 'Package', v: o.n, color: i === 3 ? 'var(--cds-chart-muted)' : SM.color(i === 0 ? 1 : 0) }] }; }) });
+});
+
+dash.draw('wlready', (tb) => {
+  const d = dash.data('weld_pipe');
+  if (d.status !== 'ok') { tb.replaceChildren(); return; }
+  const rows = d.data.filter((r) => r.key === SM.prio() && r.stage.startsWith('1)')).sort((a, b) => b.db - a.db).slice(0, 30);
+  tb.replaceChildren(...rows.map((r) => {
+    const tr = document.createElement('tr'); tr.setAttribute('data-key', SM.enc(r.key) + ',' + SM.enc(r.package));
+    const cell = (t, cls) => { const td = document.createElement('td'); if (cls) td.className = cls; td.textContent = t; tr.append(td); return td; };
+    cell(r.package); cell(r.priority); cell(SM.fmt(r.db)); cell(SM.fmt(r.joints)); cell(SM.fdate(SM.parse(r.last_date)));
+    const idle = cell(String(r.idle_days)); if (r.idle_days > 60) idle.style.color = 'var(--color-bad)';
+    cell(r.status || '—', 'l');
+    return tr;
+  }));
+});
+
+dash.draw('wlrt', (tb) => {
+  const d = dash.data('weld_rt');
+  if (d.status !== 'ok') { tb.replaceChildren(); return; }
+  const rows = d.data.filter((r) => r.key === SM.prio()).sort((a, b) => b.joints - a.joints);
+  tb.replaceChildren(...rows.map((r) => {
+    const tr = document.createElement('tr'); tr.setAttribute('data-key', SM.enc(r.key) + ',' + SM.enc(r.material));
+    const cell = (t) => { const td = document.createElement('td'); td.textContent = t; tr.append(td); return td; };
+    cell(r.material); cell(SM.fmt(r.joints)); cell(SM.fmt(r.rt));
+    const td = cell(r.rt_pct === null ? '—' : d3.format('.1%')(r.rt_pct));
+    const bar = document.createElement('span'); bar.className = 'sm-pbar'; const f = document.createElement('i');
+    f.style.width = Math.min(100, (r.rt_pct || 0) * 400) + '%'; f.style.background = SM.color(0); bar.append(f); td.append(bar);
+    cell(SM.fmt(r.db));
+    return tr;
+  }));
+});
+
+dash.draw('wlmat', (el) => {
+  const d = dash.data('weld_mix');
+  if (d.status !== 'ok') return SM.placeholder(el, d.status === 'loading' ? 'loading' : 'error');
+  const rows = d.data.filter((r) => WL.inKey(r.priority));
+  const g = [...d3.rollup(rows, (v) => d3.sum(v, (r) => +r.db), (r) => r.material)].sort((a, b) => b[1] - a[1]);
+  const top = g.slice(0, 6), rest = d3.sum(g.slice(6), (x) => x[1]);
+  if (rest > 0) top.push(['อื่นๆ', rest]);
+  const total = d3.sum(top, (x) => x[1]);
+  VZ.donut(el, { label: 'สัดส่วน DB ที่เชื่อมตามวัสดุ', fmtV: (v) => SM.fmt(v) + ' DB', center: d3.format(',.0f')(total), sub: 'DB รวม',
+    slices: top.map(([k, v], i) => ({ label: k, v, color: k === 'อื่นๆ' ? 'var(--cds-chart-muted)' : SM.color(i) })) });
+});
+
+dash.draw('wlsize', (el) => {
+  const d = dash.data('weld_mix');
+  if (d.status !== 'ok') return SM.placeholder(el, d.status === 'loading' ? 'loading' : 'error');
+  const rows = d.data.filter((r) => WL.inKey(r.priority));
+  const bands = ['≤1"', '1.5–2"', '3–4"', '6–8"', '≥10"'];
+  const tj = d3.sum(rows, (r) => +r.joints) || 1, tdb = d3.sum(rows, (r) => +r.db) || 1;
+  const g = d3.rollup(rows, (v) => ({ j: d3.sum(v, (r) => +r.joints), db: d3.sum(v, (r) => +r.db) }), (r) => r.size_band);
+  el.replaceChildren();
+  const rowH = 40, h = bands.length * rowH + 10, W = Math.max(260, el.clientWidth || 600);
+  const svg = d3.select(el).append('svg').attr('width', '100%').attr('height', h).attr('viewBox', `0 0 ${W} ${h}`).attr('role', 'img').attr('aria-label', 'สัดส่วนจำนวน joint และ DB ตามขนาด joint');
+  const lw = 60, x = d3.scaleLinear().domain([0, 1]).range([lw, W - 60]);
+  const tip = SM.tooltip(el);
+  bands.forEach((b, i) => {
+    const o = g.get(b) || { j: 0, db: 0 };
+    const gg = svg.append('g').attr('transform', `translate(0,${i * rowH + 4})`);
+    gg.append('text').attr('x', lw - 8).attr('y', rowH / 2).attr('dy', '0.32em').attr('text-anchor', 'end').text(b);
+    [[o.j / tj, 0, 4], [o.db / tdb, 1, rowH / 2]].forEach(([v, c, yy]) => {
+      gg.append('rect').attr('x', x(0)).attr('y', yy).attr('height', rowH / 2 - 6).attr('width', x(v) - x(0)).style('fill', SM.color(c));
+      gg.append('text').attr('x', x(v) + 4).attr('y', yy + (rowH / 2 - 6) / 2).attr('dy', '0.32em').text(d3.format('.0%')(v));
+    });
+    gg.append('rect').attr('width', W).attr('height', rowH).attr('fill', 'transparent')
+      .on('pointermove', (ev) => { const [px, py] = d3.pointer(ev, svg.node()); const sr = svg.node().getBoundingClientRect();
+        tip.show(`Joint ${b}`, [`${SM.fmt(o.j)} joints (${d3.format('.0%')(o.j / tj)})`, `${SM.fmt(o.db)} DB (${d3.format('.0%')(o.db / tdb)})`], (px / W) * sr.width, (py / h) * sr.height); })
+      .on('pointerleave', () => tip.hide());
+  });
+});
+
+</script>
+<script>
+
+/* ---------- client DB (AMOGH) ---------- */
+window.AM = { keys: ['Overall', 'E08', 'E04', 'E04-01', 'E04-02', 'E04-03', 'E07'], inKey: (key, p) => key === 'Overall' || String(p || '').startsWith(key) };
+
+dash.calc('am_recon', {
+  title: 'AMOGH เทียบ Weld Log ราย package',
+  description: 'DB ที่ AMOGH นับว่าเสร็จ ((1)+(4)) เทียบ DB ใน Weld Log ของ package เดียวกัน',
+  inputs: ['am_pkg', 'weld_pkg'],
+  fn: (am_pkg, weld_pkg) => {
+    const log = new Map(weld_pkg.map((w) => [String(w.package).trim(), +w.db]));
+    const out = [];
+    for (const key of ['Overall', 'E08', 'E04', 'E04-01', 'E04-02', 'E04-03', 'E07']) {
+      for (const p of am_pkg) {
+        if (key !== 'Overall' && !String(p.priority || '').startsWith(key)) continue;
+        const pk = String(p.package).trim();
+        if (!log.has(pk)) continue;
+        const am_done = +p.am_done_db || 0, log_db = log.get(pk), diff = log_db - am_done;
+        out.push({ key, package: pk, priority: p.priority, am_done, log_db, diff, am_pending: (+p.pipe_db || 0) - am_done,
+          group: Math.abs(diff) <= 5 ? 'ตรงกัน (±5 DB)' : diff > 0 ? 'Weld Log มากกว่า' : 'AMOGH มากกว่า' });
+      }
+    }
+    return out;
+  },
+});
+
+dash.calc('am_nde', {
+  title: 'RT ที่ต้องทำเทียบที่ทำแล้ว ราย package',
+  description: 'ผลรวม % RT ตาม NDE class ของ joint ที่เชื่อมแล้ว (AMOGH) เทียบจำนวน joint ที่มี RT/PAUT ใน Weld Log',
+  inputs: ['am_pkg', 'weld_pkg'],
+  fn: (am_pkg, weld_pkg) => {
+    const rt = new Map(weld_pkg.map((w) => [String(w.package).trim(), +w.rt]));
+    const out = [];
+    for (const key of ['Overall', 'E08', 'E04', 'E04-01', 'E04-02', 'E04-03', 'E07']) {
+      for (const p of am_pkg) {
+        if (key !== 'Overall' && !String(p.priority || '').startsWith(key)) continue;
+        const req = +p.rt_req || 0;
+        if (req <= 0) continue;
+        const pk = String(p.package).trim();
+        const done = rt.has(pk) ? rt.get(pk) : 0;
+        out.push({ key, package: pk, priority: p.priority, welded_joints: +p.welded_joints || 0, rt_req: req, rt_done: done, short: Math.max(0, Math.round(req) - done) });
+      }
+    }
+    return out;
+  },
+});
+
+dash.calc('am_totals', {
+  title: 'สรุป AMOGH ตาม Priority',
+  description: 'DB/joints ตามสถานะ, จำนวน package ที่ไม่ตรงกับ Weld Log และ weld report ที่ไม่มี PDF',
+  inputs: ['am_pkg', 'am_recon'],
+  fn: (am_pkg, am_recon) => ['Overall', 'E08', 'E04', 'E04-01', 'E04-02', 'E04-03', 'E07'].map((key) => {
+    const rows = am_pkg.filter((p) => key === 'Overall' || String(p.priority || '').startsWith(key));
+    const s = (f) => rows.reduce((a, r) => a + (+r[f] || 0), 0);
+    const pipe_db = s('pipe_db'), done = s('am_done_db');
+    const rc = am_recon.filter((r) => r.key === key);
+    return { key, pipe_db, done_pct: pipe_db ? done / pipe_db : null, db2: s('db2'), j2: s('j2'), pk2: rows.filter((r) => +r.db2 > 0).length,
+      db3: s('db3'), j3: s('j3'), db4: s('db4'), j4: s('j4'), pdf_missing: s('pdf_missing'),
+      matched: rc.length, mismatch: rc.filter((r) => Math.abs(r.diff) > 5).length };
+  }),
+});
+
+dash.draw('amkpi', (el) => {
+  const f = el.dataset.k; const d = dash.data('am_totals');
+  if (d.status !== 'ok') { el.replaceChildren('—'); return; }
+  const key = SM.prio(); const row = d.data.find((r) => r.key === key);
+  const sp = document.createElement('span');
+  sp.setAttribute('data-source', 'am_totals'); sp.setAttribute('data-field', f); sp.setAttribute('data-where', SM.where({ key }));
+  const v = row ? row[f] : null;
+  sp.textContent = v === null || v === undefined ? '—' : f === 'done_pct' ? d3.format('.1%')(v) : SM.fmt(v);
+  el.replaceChildren(sp);
+});
+
+dash.draw('amstatus', (el) => {
+  const d = dash.data('am_status');
+  if (d.status !== 'ok') return SM.placeholder(el, d.status === 'loading' ? 'loading' : 'error');
+  const key = SM.prio();
+  const rows = d.data.filter((r) => AM.inKey(key, r.priority) && !String(r.note).startsWith('(6)'));
+  const order = ['E08-01', 'E08-02', 'E04-01', 'E04-02', 'E04-03', 'E07', '(ไม่ระบุ)'];
+  const g = d3.rollup(rows, (v) => d3.sum(v, (r) => +r.db), (r) => r.priority, (r) => String(r.note).slice(0, 3));
+  const parts = [['(1)', '(1) Completed', SM.color(0)], ['(4)', '(4) รอ ITR-118', SM.color(1)], ['(3)', '(3) รอคีย์ AMOGH', SM.color(2)], ['(2)', '(2) Incompleted', 'var(--color-bad)'], ['(5)', '(5) IJ', 'var(--cds-chart-muted)']];
+  SM.hbars(el, { label: 'DB ตามสถานะใน AMOGH แต่ละ Priority', rowH: 32,
+    rows: order.filter((p) => g.has(p)).map((p) => {
+      const m = g.get(p); const tot = d3.sum([...m.values()]);
+      return { label: p, totalText: `${SM.fmt(tot)} DB · เหลือ ${SM.fmt(m.get('(2)') || 0)}`, parts: parts.map(([c, l, col]) => ({ label: l, v: m.get(c) || 0, color: col })).filter((x) => x.v > 0) };
+    }) });
+});
+
+dash.draw('amremain', (tb) => {
+  const d = dash.data('am_pkg');
+  if (d.status !== 'ok') { tb.replaceChildren(); return; }
+  const key = SM.prio();
+  const rows = d.data.filter((p) => AM.inKey(key, p.priority) && +p.db2 > 0).sort((a, b) => b.db2 - a.db2).slice(0, 25);
+  if (!rows.length) { const tr = document.createElement('tr'); const td = document.createElement('td'); td.colSpan = 6; td.className = 'l'; td.textContent = 'ไม่มีงานค้างใน Priority นี้'; tr.append(td); tb.replaceChildren(tr); return; }
+  tb.replaceChildren(...rows.map((p) => {
+    const tr = document.createElement('tr');
+    const cell = (t) => { const td = document.createElement('td'); td.textContent = t; tr.append(td); return td; };
+    cell(p.package); cell(p.priority); cell(SM.fmt(+p.db2)); cell(SM.fmt(+p.j2)); cell(SM.fmt(+p.pipe_db));
+    const pct = +p.pipe_db ? +p.db2 / +p.pipe_db : 0; const td = cell(SM.fp(pct));
+    const bar = document.createElement('span'); bar.className = 'sm-pbar'; const f = document.createElement('i'); f.style.width = Math.min(100, pct * 100) + '%'; f.style.background = 'var(--color-bad)'; bar.append(f); td.append(bar);
+    return tr;
+  }));
+});
+
+dash.draw('amremaintype', (el) => {
+  const d = dash.data('am_status');
+  if (d.status !== 'ok') return SM.placeholder(el, d.status === 'loading' ? 'loading' : 'error');
+  const key = SM.prio();
+  const rows = d.data.filter((r) => AM.inKey(key, r.priority) && String(r.note).startsWith('(2)'));
+  if (!rows.length) return SM.empty(el, 'ไม่มีงานค้างใน Priority นี้');
+  const g = [...d3.rollup(rows, (v) => ({ db: d3.sum(v, (r) => +r.db), j: d3.sum(v, (r) => +r.joints) }), (r) => r.joint_type)].sort((a, b) => b[1].db - a[1].db);
+  SM.hbars(el, { label: 'DB งานเหลือแยกชนิด joint', rowH: 28,
+    rows: g.map(([t, o]) => ({ label: t, totalText: `${SM.fmt(o.db)} DB · ${SM.fmt(o.j)} joints`, parts: [{ label: 'DB', v: o.db, color: 'var(--color-bad)' }] })) });
+});
+
+dash.draw('amreconbar', (el) => {
+  const d = dash.data('am_recon');
+  if (d.status !== 'ok') return SM.placeholder(el, d.status === 'loading' ? 'loading' : 'error');
+  const rows = d.data.filter((r) => r.key === SM.prio());
+  const groups = [['ตรงกัน (±5 DB)', 'var(--color-ok)'], ['Weld Log มากกว่า', SM.color(1)], ['AMOGH มากกว่า', SM.color(0)]];
+  SM.hbars(el, { label: 'จำนวน package ที่ตัวเลขตรงกันและไม่ตรงกัน', rowH: 30,
+    rows: groups.map(([gname, col]) => { const v = rows.filter((r) => r.group === gname); const s = d3.sum(v, (r) => Math.abs(r.diff));
+      return { label: gname, totalText: `${v.length} pkg` + (gname.startsWith('ตรง') ? '' : ` · ต่างรวม ${SM.fmt(s)} DB`), parts: [{ label: 'Packages', v: v.length, color: col }] }; }) });
+});
+
+dash.draw('amrecon', (tb) => {
+  const d = dash.data('am_recon');
+  if (d.status !== 'ok') { tb.replaceChildren(); return; }
+  const rows = d.data.filter((r) => r.key === SM.prio() && Math.abs(r.diff) > 5).sort((a, b) => Math.abs(b.diff) - Math.abs(a.diff)).slice(0, 30);
+  tb.replaceChildren(...rows.map((r) => {
+    const tr = document.createElement('tr'); tr.setAttribute('data-key', SM.enc(r.key) + ',' + SM.enc(r.package));
+    const cell = (t) => { const td = document.createElement('td'); td.textContent = t; tr.append(td); return td; };
+    cell(r.package); cell(r.priority); cell(SM.fmt(r.am_done)); cell(SM.fmt(r.log_db));
+    const c = cell((r.diff > 0 ? '+' : '') + SM.fmt(r.diff)); c.style.color = r.diff > 0 ? 'var(--color-warn)' : 'var(--color-bad)';
+    cell(SM.fmt(r.am_pending));
+    return tr;
+  }));
+});
+
+dash.draw('amdocs', (tb) => {
+  const d = dash.data('am_pkg');
+  if (d.status !== 'ok') { tb.replaceChildren(); return; }
+  const key = SM.prio();
+  const rows = d.data.filter((p) => AM.inKey(key, p.priority) && +p.j3 > 0).sort((a, b) => b.db3 - a.db3).slice(0, 25);
+  tb.replaceChildren(...rows.map((p) => {
+    const tr = document.createElement('tr');
+    for (const v of [p.package, p.priority, SM.fmt(+p.db3), SM.fmt(+p.j3), SM.fmt(+p.pdf_missing)]) { const td = document.createElement('td'); td.textContent = v; tr.append(td); }
+    return tr;
+  }));
+});
+
+window.AMLAG = { buckets: ['≤7 วัน', '8–14 วัน', '15–30 วัน', '31–60 วัน', '>60 วัน'], color: (i) => ['var(--color-ok)', SM.color(0), SM.color(1), 'var(--color-warn)', 'var(--color-bad)'][i] };
+dash.draw('amlaglegend', (el) => {
+  el.replaceChildren(...AMLAG.buckets.map((b, i) => { const sp = document.createElement('span'); const sw = document.createElement('i'); sw.className = 'sw'; sw.style.background = AMLAG.color(i); sp.append(sw, document.createTextNode(b)); return sp; }));
+});
+dash.draw('amlag', (el) => {
+  const d = dash.data('am_lag');
+  if (d.status !== 'ok') return SM.placeholder(el, d.status === 'loading' ? 'loading' : 'error');
+  const key = SM.prio();
+  const rows = d.data.filter((r) => AM.inKey(key, r.priority));
+  const g = d3.rollup(rows, (v) => d3.sum(v, (r) => +r.joints), (r) => r.month, (r) => r.bucket);
+  const months = [...g.keys()].sort();
+  SM.hbars(el, { label: 'จำนวน joint ตามระยะเวลาคีย์เข้า AMOGH แต่ละเดือนที่เชื่อม', rowH: 26,
+    rows: months.map((m) => { const mm = g.get(m); return { label: d3.utcFormat('%b %Y')(d3.utcParse('%Y-%m')(m)), totalText: SM.fmt(d3.sum([...mm.values()])) + ' joints',
+      parts: AMLAG.buckets.map((b, i) => ({ label: b, v: mm.get(b) || 0, color: AMLAG.color(i) })).filter((x) => x.v > 0) }; }) });
+});
+
+dash.draw('amndebar', (el) => {
+  const d = dash.data('am_nde');
+  if (d.status !== 'ok') return SM.placeholder(el, d.status === 'loading' ? 'loading' : 'error');
+  const rows = d.data.filter((r) => r.key === SM.prio());
+  const order = ['E08-01', 'E08-02', 'E04-01', 'E04-02', 'E04-03', 'E07', '(ไม่ระบุ)'];
+  const g = d3.rollup(rows, (v) => ({ req: d3.sum(v, (r) => r.rt_req), done: d3.sum(v, (r) => r.rt_done), short: v.filter((r) => r.short > 0).length }), (r) => r.priority);
+  SM.hbars(el, { label: 'RT ที่ต้องทำเทียบที่ทำแล้วแต่ละ Priority', rowH: 30,
+    rows: order.filter((p) => g.has(p)).map((p) => { const o = g.get(p);
+      return { label: p, totalText: `ทำแล้ว ${SM.fmt(o.done)} / ต้องทำ ~${SM.fmt(Math.round(o.req))} · ${o.short} pkg ขาด`,
+        parts: [{ label: 'ทำแล้ว (นับไม่เกินที่ต้องทำ)', v: Math.min(o.done, o.req), color: SM.color(0) }, { label: 'ยังขาด', v: Math.max(0, o.req - o.done), color: 'var(--color-bad)' }] }; }) });
+});
+
+dash.draw('amnde', (tb) => {
+  const d = dash.data('am_nde');
+  if (d.status !== 'ok') { tb.replaceChildren(); return; }
+  const rows = d.data.filter((r) => r.key === SM.prio() && r.short > 0).sort((a, b) => b.short - a.short || b.rt_req - a.rt_req).slice(0, 25);
+  tb.replaceChildren(...rows.map((r) => {
+    const tr = document.createElement('tr'); tr.setAttribute('data-key', SM.enc(r.key) + ',' + SM.enc(r.package));
+    for (const [v, red] of [[r.package], [r.priority], [SM.fmt(r.welded_joints)], [d3.format('.1f')(r.rt_req)], [SM.fmt(r.rt_done)], [SM.fmt(r.short), true]]) {
+      const td = document.createElement('td'); td.textContent = v; if (red) td.style.color = 'var(--color-bad)'; tr.append(td);
+    }
+    return tr;
+  }));
+});
+
+</script>
+<script>
+
+/* ---------- reconciliation: why DB differs ---------- */
+window.RC = {
+  info: {
+    OK: ['ok', 'ตรงกัน'], OK2: ['bad', 'ตรวจขนาด joint ให้ตรงกัน'],
+    F: ['cls', 'Weld Log นับ support/attachment (AF) เป็น DB งานท่อ แต่ AMOGH แยกเป็น Pipe Support · ตกลงวิธีนับกับลูกค้า'],
+    E: ['cls', 'AMOGH จัดเป็น IJ · ตรวจว่าเป็นงานในสัญญาเราหรือไม่'],
+    A1: ['miss', 'Vendor package (PAK-A000000) ไม่อยู่ใน AMOGH · รายงานแยกเป็นงาน Non-AMOGH'],
+    A4: ['miss', 'Package แบบ TRIM ไม่มีใน AMOGH · ขอลูกค้าสร้าง package / ยืนยัน scope'],
+    A5: ['miss', 'เลข joint หรือ drawing ไม่ตรง หรือเป็น joint เพิ่มหน้างาน · ตรวจ ISO rev และขอเพิ่ม joint ใน AMOGH'],
+    A3: ['miss', 'เชื่อมหลัง cut-off 31 ต.ค. · จะตรงในรอบถัดไป'],
+    A2: ['miss', 'Joint AF/TW ไม่มีใน AMOGH · ตรวจว่าเป็น support หรือไม่'],
+    B: ['bad', 'AMOGH ยกเลิกแล้ว แต่เรายังนับ · ตัดออกจาก Weld Log หรือขอลูกค้าคืนสถานะ'],
+    C: ['bad', 'เชื่อมแล้วแต่ AMOGH ยังเป็น Incompleted · ส่งผลเชื่อมให้ลูกค้าอัปเดต'],
+    D: ['bad', 'ITR-118 เสร็จแล้ว รอคีย์ AMOGH · เร่งคีย์ข้อมูล'],
+    X: ['xtra', 'AMOGH นับว่าเสร็จ แต่ไม่มีใน Weld Log · ตรวจว่าใครเชื่อม (UJV/งานเก่า) หรือ Log ตกหล่น'],
+  },
+  order: ['OK', 'F', 'E', 'A1', 'A4', 'A5', 'A3', 'A2', 'OK2', 'C', 'B', 'D', 'X'],
+  color: (k) => ({ ok: 'var(--color-ok)', cls: SM.color(0), miss: SM.color(1), bad: 'var(--color-bad)', xtra: 'var(--cds-chart-muted)' })[k],
+  rows: () => dash.data('recon_reason').data.filter((r) => SM.prio() === 'Overall' || String(r.priority).startsWith(SM.prio())),
+};
+
+dash.draw('rcbridge', (el) => {
+  const d = dash.data('recon_reason');
+  if (d.status !== 'ok') return SM.placeholder(el, d.status === 'loading' ? 'loading' : 'error');
+  const g = d3.rollup(RC.rows(), (v) => ({ reason: v[0].reason, j: d3.sum(v, (r) => +r.joints), log: d3.sum(v, (r) => +r.log_db), am: d3.sum(v, (r) => +r.am_db) }), (r) => r.code);
+  const totalLog = d3.sum([...g.values()], (o) => o.log);
+  SM.hbars(el, { label: 'DB ใน Weld Log แยกตามเหตุผลที่ไม่ตรงกับ AMOGH', rowH: 28,
+    rows: RC.order.filter((c) => g.has(c)).map((c) => { const o = g.get(c); const v = c === 'X' ? o.am : o.log;
+      const nm = o.reason.length > 44 ? o.reason.slice(0, 42) + '…' : o.reason;
+      return { label: nm, totalText: `${SM.fmt(v)} DB` + (c === 'X' ? ' (AMOGH)' : ` · ${d3.format('.0%')(totalLog ? v / totalLog : 0)}`), parts: [{ label: c === 'X' ? 'AMOGH DB' : 'Weld Log DB', v, color: RC.color(RC.info[c][0]) }] }; }) });
+});
+
+dash.draw('rctable', (tb) => {
+  const d = dash.data('recon_reason');
+  if (d.status !== 'ok') { tb.replaceChildren(); return; }
+  const g = d3.rollup(RC.rows(), (v) => ({ reason: v[0].reason, j: d3.sum(v, (r) => +r.joints), log: d3.sum(v, (r) => +r.log_db), am: d3.sum(v, (r) => +r.am_db) }), (r) => r.code);
+  const totalLog = d3.sum([...g.values()], (o) => o.log), totalAm = d3.sum([...g.values()], (o) => o.am);
+  const out = RC.order.filter((c) => g.has(c)).map((c) => {
+    const o = g.get(c); const tr = document.createElement('tr');
+    const cell = (t, cls) => { const td = document.createElement('td'); if (cls) td.className = cls; td.textContent = t; tr.append(td); return td; };
+    const c0 = cell(o.reason, 'l'); const sw = document.createElement('i'); sw.className = 'sw'; sw.style.background = RC.color(RC.info[c][0]); sw.style.marginRight = '6px'; c0.prepend(sw);
+    cell(SM.fmt(o.j)); cell(c === 'X' ? '—' : SM.fmt(o.log)); cell(SM.fmt(o.am)); cell(c === 'X' ? '—' : d3.format('.1%')(totalLog ? o.log / totalLog : 0)); cell(RC.info[c][1], 'l');
+    return tr;
+  });
+  const tr = document.createElement('tr'); tr.className = 'tot grand';
+  for (const [t, cls] of [['รวม', 'l'], [SM.fmt(d3.sum([...g.entries()].filter(([c]) => c !== 'X'), ([, o]) => o.j)) + ' (Log)'], [SM.fmt(totalLog)], [SM.fmt(totalAm)], ['100%'], ['', 'l']]) { const td = document.createElement('td'); if (cls) td.className = cls; td.textContent = t; tr.append(td); }
+  out.push(tr);
+  tb.replaceChildren(...out);
+});
+
+dash.draw('rcpkg', (tb) => {
+  const d = dash.data('recon_pkg');
+  if (d.status !== 'ok') { tb.replaceChildren(); return; }
+  const key = SM.prio();
+  const n = (r, ks) => ks.reduce((a, k) => a + (+r[k] || 0), 0);
+  const rows = d.data.filter((r) => key === 'Overall' || String(r.priority).startsWith(key))
+    .map((r) => ({ r, miss: n(r, ['A1', 'A2', 'A3', 'A4', 'A5']), stat: n(r, ['B', 'C', 'D', 'OK2']), off: (+r.log_total || 0) - (+r.OK || 0) + (+r.X || 0) }))
+    .sort((a, b) => b.off - a.off).slice(0, 30);
+  tb.replaceChildren(...rows.map(({ r, miss, stat }) => {
+    const tr = document.createElement('tr');
+    const vals = [r.package, r.priority, SM.fmt(+r.log_total), SM.fmt(+r.OK), SM.fmt(+r.F), SM.fmt(+r.E), SM.fmt(miss), SM.fmt(stat), SM.fmt(+r.X)];
+    vals.forEach((v, i) => { const td = document.createElement('td'); td.textContent = v === '0' ? '' : v; if (i === 6 && miss > 0) td.style.color = 'var(--color-warn)'; if (i === 7 && stat > 0) td.style.color = 'var(--color-bad)'; tr.append(td); });
+    return tr;
+  }));
+});
+
+</script>
+<script>
+
+/* ---------- completion forecast (Overall ITR Status) ---------- */
+window.CP = {
+  inKey: (p) => SM.prio() === 'Overall' || String(p || '').startsWith(SM.prio()),
+  fri: (s) => { const d = new Date(s + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + ((5 - d.getUTCDay() + 7) % 7)); return d.toISOString().slice(0, 10); },
+  DATA_DATE: '2026-11-13',
+};
+
+dash.calc('cp_totals', {
+  title: 'สรุปการปิดรายการตาม Priority',
+  description: 'จำนวนรายการ, Complete, ปิดได้รายสัปดาห์ (Complete date), forecast ตามเดือน และรายการที่เลย MCWD Target (เทียบ 13 พ.ย. 2026)',
+  inputs: ['cp_tags'],
+  fn: (cp_tags) => {
+    const fri = (s) => { const d = new Date(s + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + ((5 - d.getUTCDay() + 7) % 7)); return d.toISOString().slice(0, 10); };
+    const lastWk = '2026-11-13';
+    const prev = (w, n) => { const d = new Date(w + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() - 7 * n); return d.toISOString().slice(0, 10); };
+    return ['Overall', 'E08', 'E04', 'E04-01', 'E04-02', 'E04-03', 'E07'].map((key) => {
+      const rows = cp_tags.filter((r) => key === 'Overall' || String(r.priority).startsWith(key));
+      const done = rows.filter((r) => r.status === 'Complete');
+      const open = rows.filter((r) => r.status !== 'Complete');
+      const wk = (w) => done.filter((r) => r.complete_date && fri(r.complete_date) === w).length;
+      const last4 = [0, 1, 2, 3].map((i) => wk(prev(lastWk, i)));
+      return { key, total: rows.length, done: done.length, open: open.length, pct: rows.length ? done.length / rows.length : null,
+        last_wk: last4[0], avg4: last4.reduce((a, b) => a + b, 0) / 4,
+        fc_dec: open.filter((r) => r.forecast && r.forecast <= '2026-12-31').length, fc_2027: open.filter((r) => r.forecast > '2026-12-31').length,
+        no_fc: open.filter((r) => !r.forecast).length, late: open.filter((r) => r.mcwd_target && r.mcwd_target < '2026-11-13').length };
+    });
+  },
+});
+
+dash.draw('cpkpi', (el) => {
+  const f = el.dataset.k; const d = dash.data('cp_totals');
+  if (d.status !== 'ok') { el.replaceChildren('—'); return; }
+  const key = SM.prio(); const row = d.data.find((r) => r.key === key);
+  const sp = document.createElement('span');
+  sp.setAttribute('data-source', 'cp_totals'); sp.setAttribute('data-field', f); sp.setAttribute('data-where', SM.where({ key }));
+  const v = row ? row[f] : null;
+  sp.textContent = v === null || v === undefined ? '—' : f === 'pct' ? d3.format('.1%')(v) : f === 'avg4' ? d3.format('.1f')(v) : SM.fmt(v);
+  if (f === 'late' && v > 0) sp.style.color = 'var(--color-bad)';
+  el.replaceChildren(sp);
+});
+
+dash.draw('cpcurve', (el) => {
+  const d = dash.data('cp_tags');
+  if (d.status !== 'ok') return SM.placeholder(el, d.status === 'loading' ? 'loading' : 'error');
+  const rows = d.data.filter((r) => CP.inKey(r.priority));
+  if (!rows.length) return SM.empty(el, 'ไม่มีข้อมูลสำหรับ Priority นี้');
+  const act = d3.rollup(rows.filter((r) => r.status === 'Complete' && r.complete_date >= '2026-01-01'), (v) => v.length, (r) => CP.fri(r.complete_date));
+  const before = rows.filter((r) => r.status === 'Complete' && (!r.complete_date || r.complete_date < '2026-01-01')).length;
+  const fc = d3.rollup(rows.filter((r) => r.status !== 'Complete' && r.forecast), (v) => v.length, (r) => CP.fri(r.forecast < CP.DATA_DATE ? '2026-11-20' : r.forecast));
+  const weeks = [...new Set([...act.keys(), ...fc.keys()])].sort();
+  if (!weeks.length) return SM.empty(el, 'ไม่มีข้อมูลรายสัปดาห์');
+  const all = d3.utcFriday.range(d3.utcParse('%Y-%m-%d')(weeks[0]), d3.utcDay.offset(d3.utcParse('%Y-%m-%d')(weeks[weeks.length - 1]), 1)).map(d3.utcFormat('%Y-%m-%d'));
+  let ca = before, cf = null; const total = rows.length;
+  const pts = all.map((w) => {
+    const a = w <= CP.DATA_DATE ? act.get(w) || 0 : null; if (a !== null) ca += a;
+    const f = fc.get(w) || 0;
+    if (w >= CP.DATA_DATE) { if (cf === null) cf = ca; cf += w === CP.DATA_DATE ? 0 : f; }
+    return { w, a, ca: a !== null ? ca : null, f: w > CP.DATA_DATE ? f : null, cf: w >= CP.DATA_DATE ? cf : null };
+  });
+  el.replaceChildren();
+  const h = 340, W = Math.max(280, el.clientWidth || 600), m = { t: 14, r: 46, b: 26, l: 46 };
+  const svg = d3.select(el).append('svg').attr('width', '100%').attr('height', h).attr('viewBox', `0 0 ${W} ${h}`).attr('role', 'img').attr('aria-label', 'จำนวนรายการที่ปิดสะสม actual และ forecast พร้อมแท่งรายสัปดาห์');
+  const x = d3.scaleBand().domain(all).range([m.l, W - m.r]).padding(0.25); const xc = (w) => x(w) + x.bandwidth() / 2;
+  const y = d3.scaleLinear().domain([0, total]).nice().range([h - m.b, m.t]);
+  const y2 = d3.scaleLinear().domain([0, (d3.max(pts, (p) => Math.max(p.a || 0, p.f || 0)) || 1) * 2.2]).nice().range([h - m.b, m.t]);
+  svg.append('g').attr('class', 'grid').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(5).tickSize(-(W - m.l - m.r)).tickFormat(''));
+  svg.append('g').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(5).tickFormat(d3.format(',.0f')).tickSize(0).tickPadding(6)).select('.domain').remove();
+  svg.append('g').attr('transform', `translate(${W - m.r},0)`).call(d3.axisRight(y2).ticks(4).tickFormat(d3.format(',.0f')).tickSize(0).tickPadding(6)).select('.domain').remove();
+  const every = Math.max(1, Math.ceil(all.length / Math.max(2, Math.floor((W - m.l - m.r) / 64))));
+  svg.append('g').attr('transform', `translate(0,${h - m.b})`).call(d3.axisBottom(x).tickValues(all.filter((_, i) => i % every === 0)).tickFormat((w) => d3.utcFormat('%b %y')(SM.parse(w))).tickSizeOuter(0));
+  svg.append('g').selectAll('rect').data(pts.filter((p) => p.a)).join('rect').attr('x', (p) => x(p.w)).attr('width', x.bandwidth()).attr('y', (p) => y2(p.a)).attr('height', (p) => y2(0) - y2(p.a)).style('fill', SM.color(0)).style('opacity', 0.5);
+  svg.append('g').selectAll('rect').data(pts.filter((p) => p.f)).join('rect').attr('x', (p) => x(p.w)).attr('width', x.bandwidth()).attr('y', (p) => y2(p.f)).attr('height', (p) => y2(0) - y2(p.f)).style('fill', SM.color(1)).style('opacity', 0.5);
+  svg.append('line').attr('x1', m.l).attr('x2', W - m.r).attr('y1', y(total)).attr('y2', y(total)).style('stroke', 'var(--cds-chart-reference)').attr('stroke-dasharray', '2 3');
+  svg.append('text').attr('x', m.l + 4).attr('y', y(total) - 4).text(`ทั้งหมด ${SM.fmt(total)}`);
+  const ln = (k) => d3.line().defined((p) => p[k] !== null).x((p) => xc(p.w)).y((p) => y(p[k]));
+  svg.append('path').attr('d', ln('ca')(pts)).attr('fill', 'none').style('stroke', SM.color(0)).attr('stroke-width', 2.75);
+  svg.append('path').attr('d', ln('cf')(pts)).attr('fill', 'none').style('stroke', 'var(--cds-chart-muted)').attr('stroke-width', 2).attr('stroke-dasharray', '5 4');
+  const tx = x(CP.DATA_DATE); if (tx !== undefined) { svg.append('line').attr('x1', xc(CP.DATA_DATE)).attr('x2', xc(CP.DATA_DATE)).attr('y1', m.t).attr('y2', h - m.b).style('stroke', 'var(--cds-chart-axis)').attr('stroke-dasharray', '3 3'); svg.append('text').attr('x', xc(CP.DATA_DATE) + 4).attr('y', m.t + 10).text('13 พ.ย.'); }
+  const tip = SM.tooltip(el);
+  svg.append('g').selectAll('rect').data(pts).join('rect').attr('x', (p) => x(p.w) - (x.step() - x.bandwidth()) / 2).attr('width', x.step()).attr('y', m.t).attr('height', h - m.t - m.b).attr('fill', 'transparent')
+    .on('pointermove', (ev, p) => { const [px, py] = d3.pointer(ev, svg.node()); const sr = svg.node().getBoundingClientRect();
+      const L = []; if (p.a !== null) L.push(`ปิดได้สัปดาห์นี้: ${p.a}`, `Actual สะสม: ${SM.fmt(p.ca)}`); if (p.f !== null) L.push(`Forecast สัปดาห์นี้: ${p.f}`); if (p.cf !== null) L.push(`Forecast สะสม: ${SM.fmt(p.cf)} / ${SM.fmt(total)}`);
+      tip.show('สัปดาห์สิ้นสุด ' + SM.fdate(SM.parse(p.w)), L, (px / W) * sr.width, (py / h) * sr.height); })
+    .on('pointerleave', () => tip.hide());
+});
+
+dash.draw('cpdisc', (el) => {
+  const d = dash.data('cp_tags');
+  if (d.status !== 'ok') return SM.placeholder(el, d.status === 'loading' ? 'loading' : 'error');
+  const rows = d.data.filter((r) => CP.inKey(r.priority));
+  const order = ['E08-01', 'E08-02', 'E04-01', 'E04-02', 'E04-03', 'E07', '(ไม่ระบุ)'];
+  const discs = ['Piping', 'Mechanical', 'Structural', 'Painting', 'HSE'];
+  const g = d3.rollup(rows, (v) => ({ c: v.filter((r) => r.status === 'Complete').length, n: v.length }), (r) => r.priority, (r) => r.discipline);
+  const out = [];
+  for (const p of order) { if (!g.has(p)) continue; for (const ds of discs) { const o = g.get(p).get(ds); if (!o) continue;
+    out.push({ label: `${p} · ${ds}`, totalText: `${o.c}/${o.n} · ${d3.format('.0%')(o.c / o.n)}`, parts: [{ label: 'Complete', v: o.c, color: SM.color(0) }, { label: 'ยังไม่ Complete', v: o.n - o.c, color: 'var(--color-bad)' }] }); } }
+  SM.hbars(el, { label: 'จำนวนรายการ Complete และยังไม่ Complete แต่ละ Priority และ Discipline', rows: out, rowH: 24 });
+});
+
+window.CPR = { discs: ['Piping', 'Mechanical', 'Structural', 'Painting', 'HSE'], color: (i) => [SM.color(0), SM.color(1), SM.color(2), SM.color(3), 'var(--cds-chart-muted)'][i] };
+dash.draw('cpreasonlegend', (el) => {
+  el.replaceChildren(...CPR.discs.map((ds, i) => { const sp = document.createElement('span'); const sw = document.createElement('i'); sw.className = 'sw'; sw.style.background = CPR.color(i); sp.append(sw, document.createTextNode(ds)); return sp; }));
+});
+dash.draw('cpreason', (el) => {
+  const d = dash.data('cp_tags');
+  if (d.status !== 'ok') return SM.placeholder(el, d.status === 'loading' ? 'loading' : 'error');
+  const rows = d.data.filter((r) => CP.inKey(r.priority) && r.status !== 'Complete');
+  const g = [...d3.group(rows, (r) => r.reason || '(ไม่ระบุเหตุผล)')].map(([k, v]) => ({ k, v, n: v.length })).sort((a, b) => b.n - a.n).slice(0, 14);
+  SM.hbars(el, { label: 'เหตุผลที่รายการยังไม่ Complete ซ้อนตาม Discipline', rowH: 26,
+    rows: g.map((o) => ({ label: o.k.length > 40 ? o.k.slice(0, 38) + '…' : o.k,
+      parts: CPR.discs.map((ds, i) => ({ label: ds, v: o.v.filter((r) => r.discipline === ds).length, color: o.k.startsWith('(') ? 'var(--cds-chart-muted)' : CPR.color(i) })).filter((x) => x.v > 0) })) });
+});
+
+dash.draw('cpsubsys', (tb) => {
+  const d = dash.data('cp_tags');
+  if (d.status !== 'ok') { tb.replaceChildren(); return; }
+  const rows = d.data.filter((r) => CP.inKey(r.priority) && r.subsystem);
+  const g = [...d3.group(rows, (r) => r.subsystem)].map(([s, v]) => {
+    const open = v.filter((r) => r.status !== 'Complete');
+    const cnt = (ds) => open.filter((r) => r.discipline === ds).length;
+    const tgt = d3.max(v, (r) => r.mcwd_target || null), fc = d3.max(open, (r) => r.forecast || null);
+    return { s, name: v.find((r) => r.subsystem_name)?.subsystem_name || '', pr: [...new Set(v.map((r) => r.priority))].join(', '), pipe: cnt('Piping'), mech: cnt('Mechanical'), str: cnt('Structural'), paint: cnt('Painting'),
+      open: open.length, pct: (v.length - open.length) / v.length, tgt, fc };
+  }).filter((o) => o.open > 0).sort((a, b) => b.open - a.open);
+  tb.replaceChildren(...g.map((o) => {
+    const tr = document.createElement('tr');
+    const cell = (t, cls) => { const td = document.createElement('td'); if (cls) td.className = cls; td.textContent = t; tr.append(td); return td; };
+    cell(o.s); cell(o.name, 'l'); cell(o.pr);
+    for (const v of [o.pipe, o.mech, o.str, o.paint]) cell(v ? String(v) : '');
+    cell(String(o.open)).style.fontWeight = 'var(--cds-font-weight-medium)';
+    const td = cell(SM.fp(o.pct)); const bar = document.createElement('span'); bar.className = 'sm-pbar'; const f = document.createElement('i'); f.style.width = o.pct * 100 + '%'; f.style.background = SM.color(0); bar.append(f); td.append(bar);
+    cell(o.tgt ? SM.fdate(SM.parse(o.tgt)) : '—'); cell(o.fc ? SM.fdate(SM.parse(o.fc)) : '—');
+    const st = document.createElement('td'); const tag = document.createElement('span');
+    if (o.tgt && o.tgt < CP.DATA_DATE) { tag.className = 'sm-tag bad'; tag.textContent = 'เลย Target'; }
+    else if (o.tgt && o.fc && o.fc > o.tgt) { tag.className = 'sm-tag warn'; tag.textContent = 'Forecast เกิน Target'; }
+    else { tag.className = 'sm-tag ok'; tag.textContent = o.tgt ? 'ทัน Target' : 'ไม่มี Target'; }
+    st.append(tag); tr.append(st);
+    return tr;
+  }));
+});
+
+</script>
+<script>window.__dashStart();</script>
+</body>
+</html>

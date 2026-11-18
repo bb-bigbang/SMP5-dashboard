@@ -1,0 +1,80 @@
+priority,material,joint_type,joints,joints_welded,db_welded,rt_paut
+(ไม่ระบุ),CS,Pipe Joint,1,0,0.0,0
+E04-01,CPVC,Pipe Joint_CPVC,426,0,0.0,0
+E04-01,CS,Flange Joint,36,0,0.0,0
+E04-01,CS,Pipe Joint,2990,2468,3359.0,230
+E04-01,CS,Pipe Joint_0118A Completed,31,0,0.0,0
+E04-01,CS,Pipe Joint_118A Done,2,1,2.0,0
+E04-01,CS,Pipe Joint_Date weld Conflict,22,22,37.75,0
+E04-01,CS,Pipe Joint_Done,31,4,34.0,1
+E04-01,CS,Pipe Joint_Pack Module,10,1,1.0,1
+E04-01,CS,Pipe Support Joint,90,68,1043.0,0
+E04-01,CS(GALV),Pipe Joint,64,63,89.75,1
+E04-01,CS(GALV),Pipe Support Joint,10,4,8.0,0
+E04-01,CS(GALV),Screwed/Threaded Joint,1148,1117,1695.5,0
+E04-01,SS316,Flange Joint,6,0,0.0,0
+E04-01,SS316,Pipe Joint,293,252,332.5,16
+E04-01,SS316,Pipe Joint_Date weld Conflict,1,1,1.0,0
+E04-01,SS316,Pipe Support Joint,5,4,7.0,0
+E04-02,CPVC,Pipe Joint_CPVC,1135,0,0.0,0
+E04-02,CS,Flange Joint,100,0,0.0,0
+E04-02,CS,Pipe Joint,3693,2567,5529.75,344
+E04-02,CS,Pipe Joint_0118A Completed,23,0,0.0,0
+E04-02,CS,Pipe Joint_118A Done,29,2,1.5,0
+E04-02,CS,Pipe Joint_Date weld Conflict,99,99,131.25,2
+E04-02,CS,Pipe Joint_Done,72,9,86.0,0
+E04-02,CS,Pipe Support Joint,621,328,3538.5,0
+E04-02,CS(Fgr),Pipe Joint,3,0,0.0,0
+E04-02,CS(GALV),Pipe Joint,19,19,38.0,0
+E04-02,CS(GALV),Pipe Support Joint,1,0,0.0,0
+E04-02,CS(GALV),Screwed/Threaded Joint,690,198,368.75,0
+E04-02,CS+SS316,Pipe Joint,2,2,20.0,0
+E04-02,LTCS/CS(Fgr),Pipe Joint,13,2,4.0,0
+E04-02,SS316,Flange Joint,31,0,0.0,0
+E04-02,SS316,Pipe Joint,1554,1184,3034.0,51
+E04-02,SS316,Pipe Joint_0118A Completed,15,0,0.0,0
+E04-02,SS316,Pipe Joint_118A Done,3,3,8.0,2
+E04-02,SS316,Pipe Joint_Date weld Conflict,5,4,27.0,0
+E04-02,SS316,Pipe Joint_Done,18,1,14.0,0
+E04-02,SS316,Pipe Joint_Pack Module,40,39,61.0,1
+E04-02,SS316,Pipe Support Joint,174,68,586.0,0
+E04-02,SS316LThread,Screwed/Threaded Joint,4319,0,0.0,0
+E04-03,CPVC,Pipe Joint_CPVC,10,0,0.0,0
+E04-03,CS,Flange Joint,46,0,0.0,0
+E04-03,CS,Pipe Joint,521,327,967.0,38
+E04-03,CS,Pipe Joint_0118A Completed,5,0,0.0,0
+E04-03,CS,Pipe Joint_Date weld Conflict,3,3,8.0,0
+E04-03,CS,Pipe Joint_Done,27,9,106.0,1
+E04-03,CS,Pipe Support Joint,89,47,397.0,0
+E04-03,SS316,Flange Joint,1,0,0.0,0
+E04-03,SS316,Pipe Joint,128,115,133.0,8
+E04-03,SS316,Pipe Joint_118A Done,1,1,1.5,0
+E04-03,SS316,Pipe Support Joint,2,2,3.0,0
+E07,CS,Flange Joint,10,0,0.0,0
+E07,CS,Pipe Joint,845,627,941.5,95
+E07,CS,Pipe Joint_118A Done,1,0,0.0,0
+E07,CS,Pipe Joint_Deem Complete,44,12,20.5,2
+E07,CS,Pipe Support Joint,77,42,77.5,0
+E07,CS(GALV),Pipe Joint,1043,837,639.0,0
+E07,CS(GALV),Pipe Support Joint,4,2,2.0,0
+E07,SS316,Flange Joint,2,0,0.0,0
+E07,SS316,Pipe Joint,177,134,131.0,35
+E07,SS316,Pipe Joint_Deem Complete,8,0,0.0,0
+E07,SS316,Pipe Support Joint,8,8,8.0,0
+E08-01,CS,Flange Joint,11,1,24.0,0
+E08-01,CS,Pipe Joint,967,861,2172.0,149
+E08-01,CS,Pipe Support Joint,61,61,1015.5,0
+E08-01,CS(Galv)Thread,Pipe Joint,320,222,409.75,0
+E08-01,CSRL,Pipe Joint,130,27,371.0,25
+E08-01,SS304,Pipe Joint,663,625,898.0,58
+E08-01,SS304,Pipe Support Joint,48,48,134.0,0
+E08-01,SS316,Flange Joint,10,0,0.0,0
+E08-01,SS316,Pipe Joint,204,171,175.5,27
+E08-01,SS316,Pipe Support Joint,6,6,6.0,0
+E08-02,CS,Pipe Joint,321,192,316.75,40
+E08-02,CS,Pipe Support Joint,90,47,98.75,0
+E08-02,CS(Galv)Thread,Pipe Joint,15,15,30.0,0
+E08-02,SS304,Flange Joint,2,0,0.0,0
+E08-02,SS304,Pipe Joint,579,498,1220.5,32
+E08-02,SS304,Pipe Support Joint,9,4,56.0,0
+E08-02,SS316,Pipe Joint,4,4,2.0,1

@@ -1,0 +1,66 @@
+area,activity,itr,total,actual_work,actual_itr,remain
+E04-01,Install padding,ITR-M-0902X,5,5,5,0
+E04-01,Installation of Blowerfan Mixer,ITR-M-1002A-S,3,,0,3
+E04-01,Installation of Filter Strainer,ITR-M-0204A-S,3,,0,3
+E04-01,Centering / Leveling,ITR-M-0903X / ITR-M-0205X / ITR-M-0206X,12,12,12,0
+E04-01,Pre-Alignment,ITR-M-0904X,9,9,9,0
+E04-01,Grounting Base,ITR-C-0401X,11,11,11,0
+E04-01,Bolt torque,ITR-M-0906X,25,11,11,14
+E04-01,Flange Parallelism / General Inspection,ITR-M-0908X / ITR-M-0909X,14,6,6,8
+E04-01,Install Equipment,ITR-M-0201A / ITR-M-0901A / ITR-M-0801A,22,6,14,8
+E04-01,Final Alignment,ITR-M-0905A,14,,9,5
+E04-01,Box-Up of Static Equipment,ITR-M-0208A-S,0,,0,0
+E04-01,Pre-Start,ITR-M-0014B,8,,4,4
+E04-01,Box up,ITR-M-0012B,4,,0,4
+E04-02,Install padding,ITR-M-0902X,17,15,15,2
+E04-02,Installation of Blowerfan Mixer,ITR-M-1002A-S,42,,1,41
+E04-02,Installation of Filter Strainer,ITR-M-0204A-S,20,,5,15
+E04-02,Centering / Leveling,ITR-M-0903X / ITR-M-0205X / ITR-M-0206X,111,82,82,29
+E04-02,Pre-Alignment,ITR-M-0904X,39,39,39,0
+E04-02,Grounting Base,ITR-C-0401X,82,79,79,3
+E04-02,Bolt torque,ITR-M-0906X,271,6,6,265
+E04-02,Flange Parallelism / General Inspection,ITR-M-0908X / ITR-M-0909X,181,0,0,181
+E04-02,Install Equipment,ITR-M-0201A / ITR-M-0901A / ITR-M-0801A,261,38,150,111
+E04-02,Final Alignment,ITR-M-0905A,72,,4,68
+E04-02,Box-Up of Static Equipment,ITR-M-0208A-S,36,,5,31
+E04-02,Pre-Start,ITR-M-0014B,133,,63,70
+E04-02,Box up,ITR-M-0012B,92,,25,67
+E04-03,Install padding,ITR-M-0902X,6,4,4,2
+E04-03,Installation of Blowerfan Mixer,ITR-M-1002A-S,0,,0,0
+E04-03,Installation of Filter Strainer,ITR-M-0204A-S,0,,0,0
+E04-03,Centering / Leveling,ITR-M-0903X / ITR-M-0205X / ITR-M-0206X,9,9,9,0
+E04-03,Pre-Alignment,ITR-M-0904X,9,9,9,0
+E04-03,Grounting Base,ITR-C-0401X,9,9,9,0
+E04-03,Bolt torque,ITR-M-0906X,25,0,0,25
+E04-03,Flange Parallelism / General Inspection,ITR-M-0908X / ITR-M-0909X,20,0,0,20
+E04-03,Install Equipment,ITR-M-0201A / ITR-M-0901A / ITR-M-0801A,26,6,17,9
+E04-03,Final Alignment,ITR-M-0905A,14,,1,13
+E04-03,Box-Up of Static Equipment,ITR-M-0208A-S,2,,0,2
+E04-03,Pre-Start,ITR-M-0014B,19,,6,13
+E04-03,Box up,ITR-M-0012B,7,,2,5
+E07,Install padding,ITR-M-0902X,1,1,1,0
+E07,Installation of Blowerfan Mixer,ITR-M-1002A-S,0,,0,0
+E07,Installation of Filter Strainer,ITR-M-0204A-S,0,,0,0
+E07,Centering / Leveling,ITR-M-0903X / ITR-M-0205X / ITR-M-0206X,3,3,3,0
+E07,Pre-Alignment,ITR-M-0904X,2,2,2,0
+E07,Grounting Base,ITR-C-0401X,1,1,1,0
+E07,Bolt torque,ITR-M-0906X,16,3,3,13
+E07,Flange Parallelism / General Inspection,ITR-M-0908X / ITR-M-0909X,5,5,5,0
+E07,Install Equipment,ITR-M-0201A / ITR-M-0901A / ITR-M-0801A,18,13,17,1
+E07,Final Alignment,ITR-M-0905A,5,,5,0
+E07,Box-Up of Static Equipment,ITR-M-0208A-S,3,,3,0
+E07,Pre-Start,ITR-M-0014B,5,,0,5
+E07,Box up,ITR-M-0012B,11,,3,8
+E08-01,Install padding,ITR-M-0902X,6,6,6,0
+E08-01,Installation of Blowerfan Mixer,ITR-M-1002A-S,19,,19,0
+E08-01,Installation of Filter Strainer,ITR-M-0204A-S,4,,4,0
+E08-01,Centering / Leveling,ITR-M-0903X / ITR-M-0205X / ITR-M-0206X,111,108,108,3
+E08-01,Pre-Alignment,ITR-M-0904X,32,32,32,0
+E08-01,Grounting Base,ITR-C-0401X,27,26,26,1
+E08-01,Bolt torque,ITR-M-0906X,128,84,84,44
+E08-01,Flange Parallelism / General Inspection,ITR-M-0908X / ITR-M-0909X,40,31,31,9
+E08-01,Install Equipment,ITR-M-0201A / ITR-M-0901A / ITR-M-0801A,142,110,133,9
+E08-01,Final Alignment,ITR-M-0905A,34,,34,0
+E08-01,Box-Up of Static Equipment,ITR-M-0208A-S,19,,18,1
+E08-01,Pre-Start,ITR-M-0014B,70,,69,1
+E08-01,Box up,ITR-M-0012B,62,,55,7

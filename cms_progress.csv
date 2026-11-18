@@ -1,0 +1,28 @@
+level,key,name,discipline,weight,mhrs,plan,forecast,actual,wk_plan,wk_forecast,wk_actual,last_actual,var_plan,var_forecast,earned_mhrs
+wbs,E08,WTP (E08) Overall,,,488840.797255,1.0,1.0,1.0,0.0,0.0,-1e-06,1.000001,0.0,0.0,488840.797255
+priority,E08-01,WTP (E08) UF filtration system and relevant sub-system for filtered water production,,0.160354,327214.306102,1.0,1.0,1.0,0.0,0.0,0.0,1.0,0.0,0.0,327214.306102
+discipline,E08-01,Piping Works - Erection,Piping Works - Erection,,270387.805892,1.0,1.0,1.0,0.0,0.0,0.0,1.0,0.0,0.0,270387.805892
+discipline,E08-01,Equipment Installation,Equipment Installation,,56826.50021,1.0,,1.0,0.0,,0.0,1.0,0.0,0.0,56826.50021
+priority,E08-02,WTP (E08) Remaining Scope,,0.079206,161626.491153,1.0,1.0,1.0,0.0,0.0,-4e-06,1.000004,0.0,0.0,161626.491153
+discipline,E08-02,Piping Works - Erection,Piping Works - Erection,,96837.233642,1.0,1.0,1.0,0.0,0.0,-5e-06,1.000005,0.0,0.0,96837.233642
+discipline,E08-02,Steel Structural Work,Steel Structural Work,,18300.039493,1.0,1.0,1.0,0.0,0.0,-1.1e-05,1.000011,0.0,0.0,18300.039493
+discipline,E08-02,Equipment Installation,Equipment Installation,,46489.218018,1.0,,1.0,0.0,,0.0,1.0,0.0,0.0,46489.218018
+wbs,E04,ETP(E04) Overall,,,1105750.925879,1.0,0.99774,0.746711,0.0,0.018204,0.016122,0.730589,-0.253289,-0.251029,825676.409699
+priority,E04-01,ETP (E04) Cooling Water system and relevant sub-system,,0.137803,281198.12071,1.0,1.0,0.941723,0.0,0.0,0.017667,0.924056,-0.058277,-0.058277,264810.802114
+discipline,E04-01,Piping Works - Erection,Piping Works - Erection,,205637.841127,1.0,1.0,0.935961,0.0,0.0,0.024217,0.911744,-0.064039,-0.064039,192468.970695
+discipline,E04-01,Equipment Installation,Equipment Installation,,75560.279583,1.0,,0.957406,0.0,,0.00012,0.957286,-0.042594,0.0,72341.831419
+priority,E04-02,ETP (E04) Bacteria Growth up,,0.371803,758691.820713,1.0,0.996302,0.665485,0.0,0.029788,0.01101,0.654476,-0.334515,-0.330816,504898.362246
+discipline,E04-02,Piping Works - Erection,Piping Works - Erection,,548076.826972,1.0,0.993451,0.649295,0.0,0.006901,0.018121,0.631173,-0.350705,-0.344157,355863.422299
+discipline,E04-02,Steel Structural Work,Steel Structural Work,,115998.82151,1.0,1.0,0.655363,0.0,0.065727,-0.015932,0.671295,-0.344637,-0.344637,76021.294213
+discipline,E04-02,Equipment Installation,Equipment Installation,,94616.172231,1.0,,0.771683,0.0,,0.001474,0.770208,-0.228317,0.0,73013.645735
+priority,E04-03,ETP (E04) Remaining Scope,,0.032276,65860.984456,1.0,1.0,0.849778,0.0,0.0,0.070895,0.778884,-0.150222,-0.150222,55967.245338
+discipline,E04-03,Piping Works - Erection,Piping Works - Erection,,51840.442289,1.0,1.0,0.900517,0.0,0.0,0.088352,0.812165,-0.099483,-0.099483,46683.176744
+discipline,E04-03,Equipment Installation,Equipment Installation,,14020.542167,1.0,,0.662176,0.0,,0.000268,0.661908,-0.337824,0.0,9284.068594
+wbs,E07,Flare (E07) Overall,,,445983.559703,1.0,1.0,0.777374,0.0,0.0,0.030777,0.746597,-0.222626,-0.222626,346696.156774
+priority,E07,Flare (E07),,0.218558,445983.559703,1.0,1.0,0.777374,0.0,0.0,0.030777,0.746597,-0.222626,-0.222626,346696.156774
+discipline,E07,Piping Works - Erection,Piping Works - Erection,,367453.835685,1.0,1.0,0.740193,0.0,0.0,0.03726,0.702933,-0.259807,-0.259807,271986.694735
+discipline,E07,Supply Material and Application of Insulation,Supply Material and Application of Insulation,,38698.349725,1.0,,0.937552,0.0,,0.0,0.937552,-0.062448,0.0,36281.719926
+discipline,E07,Steam Tracing,Steam Tracing,,25706.026438,1.0,,0.948126,0.0,,0.0,0.948126,-0.051874,0.0,24372.546705
+discipline,E07,Steel Structural Work,Steel Structural Work,,12221.107066,1.0,1.0,1.000009,0.0,0.0,-4.9e-05,1.000058,9e-06,9e-06,12221.213379
+discipline,E07,Equipment Installation,Equipment Installation,,1904.240789,1.0,,0.963104,0.0,,0.0,0.963104,-0.036896,0.0,1833.982029
+project,Overall,Overall,,,2040575.282838,1.0,0.998838,0.814091,0.0,0.009359,0.015193,0.798898,-0.185909,-0.184747,1661213.363727
